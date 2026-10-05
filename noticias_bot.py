@@ -39,7 +39,7 @@ HORAS_ATRAS = 8                           # Solo noticias de las ultimas X horas
 ESPERA_APROBACION_MIN = 25                # Si no respondes en este tiempo, se descarta
 MODELO_IA = "claude-sonnet-5-5"
 VOZ = "es-US-AlonsoNeural"               # Voz neutra. Femenina: "es-US-PalomaNeural"
-VELOCIDAD_VOZ = "+8%"
+VELOCIDAD_VOZ = "+15%"
 VOLUMEN_MUSICA = 0.10                     # 0.10 = bajito, debajo de la voz
 CARPETA_MUSICA = "musica"                 # Pone ahi archivos .mp3 libres de derechos
 HASHTAGS_FIJOS = ["#QLQ", "#QueloQueViral", "#noticias", "#viral", "#noticiasdehoy"]
@@ -301,17 +301,23 @@ ESTRUCTURA:
 - gancho: la frase que atrapa en los primeros 2 segundos (en pantalla, maximo 60 caracteres).
 - 3 placas de desarrollo: 1) que paso, 2) el contexto o dato mas llamativo, 3) por que importa o que sigue.
   Para cada placa: "titulo" (2 a 4 palabras, ej: "Que paso", "El dato clave", "Que sigue"),
-  "pantalla" (texto para leer, maximo 140 caracteres) y "voz" (lo que dice la voz en off,
-  1 o 2 oraciones, maximo 30 palabras).
+  "pantalla" (texto para leer, maximo 120 caracteres) y "voz" (lo que dice la voz en off,
+  1 o 2 oraciones cortas, MAXIMO 20 palabras).
+- El Reel completo debe durar unos 30 segundos: se breve y directo.
+- pregunta: una pregunta corta para invitar a comentar (maximo 60 caracteres), ej: "¿Tu que harias?", "¿Lo sabias?".
 - Para el gancho y cada placa, "video": 1 a 3 palabras EN INGLES para buscar un video de stock que
   ilustre esa parte (ej: "dog walking road", "football stadium crowd", "smartphone hands").
-  Nada de personas famosas ni marcas: escenas genericas.
+  * Escenas genericas y CONCRETAS (objetos, lugares, acciones). Nada de personas famosas ni marcas.
+  * NUNCA pidas banderas, mapas, textos, numeros, anos, elecciones ni simbolos politicos.
+  * Si la noticia ocurre en un lugar, usa una escena de ESE lugar (ej: "madrid street", "tokyo night"),
+    nunca de otro pais.
 - Si alguna informacion viene de un video de YouTube, nombra al canal como fuente en "pantalla" o "voz".
 
 Responde SOLO con JSON valido:
 {{"categoria": "UNA PALABRA EN MAYUSCULAS",
-"gancho": "...", "voz_gancho": "version hablada del gancho, maximo 15 palabras", "video_gancho": "...",
+"gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...",
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "..."}}, (3 placas en total)],
+"pregunta": "...",
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
 "hashtags": ["#hasta", "#seis", "#hashtags"]}}
 
@@ -434,26 +440,44 @@ def capa_desarrollo(p, numero, total, categoria, ruta):
     img.save(ruta)
 
 
-def capa_cierre(medios, creadores, autores_video, ruta):
+def capa_cierre(medios, creadores, autores_video, ruta, pregunta=""):
     img = Image.new("RGBA", (ANCHO, ALTO), FONDO + (225,))
     d = ImageDraw.Draw(img)
-    y = ARRIBA
+    y = ARRIBA - 40
     bloques = [("Fuentes", ", ".join(medios))]
     if creadores:
         bloques.append(("Video viral", ", ".join(creadores)))
     if autores_video:
         bloques.append(("Imágenes", ", ".join(autores_video[:3])))
     for titulo, texto in bloques:
-        y = escribir(d, titulo, fuente(True, 38), ACENTO, y)
-        y = escribir(d, texto, fuente(False, 38), TEXTO, y + 2, 1.3) + 35
-    cy = max(y + 260, 1040)
-    logo_completo(d, ANCHO // 2, cy, 230)
-    f = fuente(True, 46)
-    for i, linea in enumerate(["Síguenos para enterarte", "de lo más viral del mundo"]):
-        d.text(((ANCHO - f.getlength(linea)) / 2, cy + 260 + i * 60), linea, font=f, fill=TEXTO)
-    f2 = fuente(True, 44)
-    d.text(((ANCHO - f2.getlength(NOMBRE_CUENTA)) / 2, cy + 400), NOMBRE_CUENTA, font=f2, fill=ACENTO)
+        y = escribir(d, titulo, fuente(True, 34), ACENTO, y)
+        y = escribir(d, texto, fuente(False, 34), TEXTO, y, 1.3) + 25
+    if pregunta:
+        y = escribir(d, pregunta, fuente(True, 62), TEXTO, y + 40, 1.15)
+        y = escribir(d, "Cuéntanos en los comentarios 👇".replace(" 👇", ""), fuente(False, 38), TEXTO_SUAVE, y + 5)
+    r = 175
+    cy = max(y + r + 60, 980)
+    logo_completo(d, ANCHO // 2, cy, r)
+    f = fuente(True, 42)
+    linea = f"Síguenos en {NOMBRE_CUENTA}"
+    d.text(((ANCHO - f.getlength(linea)) / 2, cy + r + 40), linea, font=f, fill=TEXTO)
     img.save(ruta)
+
+
+# Palabras que delatan un video que puede confundir (banderas, fechas, politica, textos)
+PROHIBIDAS_VIDEO = {"flag", "flags", "usa", "america", "american", "united states", "election", "elections",
+                    "vote", "voting", "politics", "president", "trump", "biden", "text", "typography",
+                    "logo", "brand", "map", "countdown", "calendar", "independence", "patriotic",
+                    "4th of july", "july 4", "us flag"}
+
+
+def video_apto(etiquetas, busqueda):
+    """Descarta videos con banderas, anos, mapas o politica, salvo que se hayan pedido."""
+    etiquetas = (etiquetas or "").lower()
+    pedido = busqueda.lower()
+    if re.search(r"\b(19|20)\d{2}\b", etiquetas) and not re.search(r"\b(19|20)\d{2}\b", pedido):
+        return False
+    return not any(p in etiquetas and p not in pedido for p in PROHIBIDAS_VIDEO)
 
 
 def _bajar_video(url, carpeta, usados, clave):
@@ -476,7 +500,7 @@ def buscar_video(busqueda, carpeta, usados):
                 "per_page": 20, "video_type": "film"}).json()
             for v in r.get("hits", []):
                 clave = f"pb{v['id']}"
-                if clave in usados or v.get("duration", 0) < 4:
+                if clave in usados or v.get("duration", 0) < 4 or not video_apto(v.get("tags"), busqueda):
                     continue
                 opciones = [o for o in (v.get("videos") or {}).values()
                             if o.get("url") and 720 <= (o.get("height") or 0) <= 2200]
@@ -493,7 +517,8 @@ def buscar_video(busqueda, carpeta, usados):
                              params={"query": busqueda, "orientation": "portrait", "per_page": 10}).json()
             for v in r.get("videos", []):
                 clave = f"px{v['id']}"
-                if clave in usados or v.get("duration", 0) < 4:
+                etiquetas = (v.get("url") or "").replace("-", " ")
+                if clave in usados or v.get("duration", 0) < 4 or not video_apto(etiquetas, busqueda):
                     continue
                 archivos = [f for f in v.get("video_files", []) if f.get("file_type") == "video/mp4"
                             and 1280 <= (f.get("height") or 0) <= 2400]
@@ -543,10 +568,10 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida):
     tmp = tempfile.mkdtemp()
     voces = generar_voces(textos_voz, tmp)
     if voces:
-        duraciones = [duracion(v) + 0.7 for v in voces]
+        duraciones = [duracion(v) + 0.45 for v in voces]
     else:
         duraciones = [3.5] + [6.0] * (len(segmentos) - 2) + [4.0]
-    duraciones[-1] += 1.0
+    duraciones[-1] += 0.8
     fps = 30
 
     clips = []
@@ -609,7 +634,10 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida):
 def texto_publicacion(g, medios, creadores, bancos):
     etiquetas = list(dict.fromkeys(HASHTAGS_FIJOS + [h if h.startswith("#") else "#" + h
                                                       for h in g.get("hashtags", [])]))[:12]
-    lineas = [f"🔥 {g['gancho']}", "", g["descripcion"], "",
+    lineas = [f"🔥 {g['gancho']}", "", g["descripcion"], ""]
+    if g.get("pregunta"):
+        lineas += [f"💬 {g['pregunta']} Cuéntanos en los comentarios 👇", ""]
+    lineas += [
               f"📌 Fuentes: {', '.join(medios) or 'ver video citado'}"]
     if creadores:
         lineas.append(f"🎥 Video viral: {', '.join(creadores)}")
@@ -825,11 +853,12 @@ def main():
         capa_desarrollo(p, i, 3, guion["categoria"], seg["capa"])
         segmentos.append(seg)
     cierre = {"fondo": segmentos[0]["fondo"], "capa": os.path.join(carpeta, "cierre.png")}
-    capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"])
+    capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""))
     segmentos.append(cierre)
 
     textos_voz = [guion.get("voz_gancho") or guion["gancho"]] + [p["voz"] for p in guion["placas"][:3]]
-    textos_voz.append("Esto fue QueloQue Viral. Síguenos para enterarte de lo más viral del mundo.")
+    pregunta = (guion.get("pregunta") or "").strip()
+    textos_voz.append((pregunta + " " if pregunta else "") + "Síguenos en QueloQue Viral.")
     reel = os.path.join(carpeta, f"reel-{id_corrida}.mp4")
     portada = os.path.join(carpeta, f"portada-{id_corrida}.jpg")
     total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada)
