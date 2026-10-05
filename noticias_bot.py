@@ -30,7 +30,11 @@ from html.parser import HTMLParser
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
+import base64
+import hashlib
+
 import requests
+from cryptography.fernet import Fernet, InvalidToken
 from PIL import Image, ImageDraw, ImageFont
 
 # ======================== CONFIGURACION ========================
@@ -92,6 +96,43 @@ YT_PRIVACIDAD = os.environ.get("YT_PRIVACIDAD", "") or "private"
 TIKTOK_CLIENT_KEY = os.environ.get("TIKTOK_CLIENT_KEY", "")
 TIKTOK_CLIENT_SECRET = os.environ.get("TIKTOK_CLIENT_SECRET", "")
 TIKTOK_REFRESH_TOKEN = os.environ.get("TIKTOK_REFRESH_TOKEN", "")
+
+
+# ---------- Boveda de tokens ----------
+# Instagram y TikTok cambian sus tokens al renovarlos. Para que no tengas que actualizar
+# secretos a mano, el bot guarda el token vigente CIFRADO en el repositorio. La clave para
+# descifrarlo sale de tus secretos, asi que nadie mas puede leerlo.
+def _boveda():
+    base = (os.environ.get("TELEGRAM_TOKEN", "") + "|queloqueviral").encode()
+    return Fernet(base64.urlsafe_b64encode(hashlib.sha256(base).digest()))
+
+
+def _ruta_token(nombre):
+    return os.path.join("publicaciones", f"token_{nombre}.cifrado")
+
+
+def leer_token(nombre, por_defecto=""):
+    try:
+        with open(_ruta_token(nombre), "rb") as f:
+            return _boveda().decrypt(f.read()).decode()
+    except (FileNotFoundError, InvalidToken, ValueError):
+        return por_defecto
+
+
+def guardar_token(nombre, valor):
+    os.makedirs("publicaciones", exist_ok=True)
+    with open(_ruta_token(nombre), "wb") as f:
+        f.write(_boveda().encrypt(valor.encode()))
+
+
+def subir_cambios(mensaje):
+    for c in (["git", "config", "user.name", "bot-noticias"],
+              ["git", "config", "user.email", "bot@users.noreply.github.com"],
+              ["git", "add", "publicaciones"], ["git", "commit", "-m", mensaje], ["git", "push"]):
+        subprocess.run(c, check=False)
+
+
+IG_TOKEN = leer_token("instagram", IG_TOKEN)
 IG_API = "https://graph.instagram.com/v25.0"
 ARGENTINA = timezone(timedelta(hours=-3))
 CARPETA = "publicaciones"
@@ -780,10 +821,7 @@ def guardar_historial(historial_nuevo):
     os.makedirs(CARPETA, exist_ok=True)
     with open(HISTORIAL, "w", encoding="utf-8") as f:
         json.dump(historial_nuevo, f, ensure_ascii=False, indent=1)
-    for c in (["git", "config", "user.name", "bot-noticias"],
-              ["git", "config", "user.email", "bot@users.noreply.github.com"],
-              ["git", "add", HISTORIAL], ["git", "commit", "-m", "Historial"], ["git", "push"]):
-        subprocess.run(c, check=False)
+    subir_cambios("Historial")
 
 
 def preparar_sitio(archivos, caption, titulos):
@@ -947,16 +985,20 @@ def tiktok_canjear_codigo(codigo):
     """Una sola vez: cambia el codigo de autorizacion por el token de larga duracion y lo manda a Telegram."""
     r = tiktok_token({"code": codigo.strip(), "grant_type": "authorization_code",
                       "redirect_uri": tiktok_redirect()})
-    avisar("🔑 TikTok conectado. Crea en GitHub el secreto TIKTOK_REFRESH_TOKEN con este valor "
-           f"(dura un año):\n\n{r['refresh_token']}")
+    guardar_token("tiktok", r["refresh_token"])
+    subir_cambios("Token de TikTok")
+    avisar("✅ TikTok conectado y guardado. No hace falta crear ningun secreto: el bot se encarga "
+           "de renovarlo solo.")
 
 
 def subir_a_tiktok(ruta_video):
     """Manda el video a la bandeja de TikTok como borrador (no requiere auditoria)."""
-    tok = tiktok_token({"grant_type": "refresh_token", "refresh_token": TIKTOK_REFRESH_TOKEN})
-    if tok.get("refresh_token") and tok["refresh_token"] != TIKTOK_REFRESH_TOKEN:
-        avisar("🔑 TikTok renovó su token. Reemplaza el secreto TIKTOK_REFRESH_TOKEN en GitHub por:\n\n"
-               + tok["refresh_token"])
+    vigente = leer_token("tiktok", TIKTOK_REFRESH_TOKEN)
+    if not vigente:
+        raise RuntimeError("TikTok no esta conectado. Corre el modo tiktok_link y despues tiktok_token.")
+    tok = tiktok_token({"grant_type": "refresh_token", "refresh_token": vigente})
+    if tok.get("refresh_token"):
+        guardar_token("tiktok", tok["refresh_token"])       # TikTok lo puede cambiar: guardamos el nuevo
     tam = os.path.getsize(ruta_video)
     if tam > 64 * 1024 * 1024:
         raise RuntimeError("El video pesa mas de 64 MB.")
@@ -976,17 +1018,30 @@ def subir_a_tiktok(ruta_video):
     return datos.get("publish_id", "")
 
 
+MARCA_TOKEN = os.path.join(CARPETA, "token_instagram_renovado.txt")
+DIAS_ENTRE_RENOVACIONES = 30
+
+
 def renovar_token():
-    """Extiende la vida del token (dura 60 dias). Si cambia, te avisa para actualizarlo."""
+    """Renueva el token de Instagram (dura 60 dias) una vez por mes, no en cada publicacion.
+    El token nuevo se guarda cifrado en el repositorio, asi que no hay que actualizar ningun secreto."""
     try:
+        if os.path.exists(MARCA_TOKEN):
+            with open(MARCA_TOKEN, encoding="utf-8") as f:
+                ultima = datetime.fromisoformat(f.read().strip())
+            if datetime.now() - ultima < timedelta(days=DIAS_ENTRE_RENOVACIONES):
+                return
         r = requests.get("https://graph.instagram.com/refresh_access_token",
                          params={"grant_type": "ig_refresh_token", "access_token": IG_TOKEN}, timeout=30).json()
         nuevo, dias = r.get("access_token"), r.get("expires_in", 0) // 86400
-        if nuevo and nuevo != IG_TOKEN:
-            avisar("🔑 Instagram genero un token nuevo. Copialo y reemplaza el secreto IG_TOKEN en GitHub "
-                   "(Settings > Secrets > Actions):\n\n" + nuevo)
-        elif dias:
-            print(f"Token de Instagram renovado: vence en {dias} dias.")
+        if not nuevo:
+            print(f"No se pudo renovar el token: {r}")
+            return
+        os.makedirs(CARPETA, exist_ok=True)
+        with open(MARCA_TOKEN, "w", encoding="utf-8") as f:
+            f.write(datetime.now().isoformat(timespec="seconds"))
+        guardar_token("instagram", nuevo)                  # se guarda cifrado; no hay que tocar nada
+        print(f"Token de Instagram renovado y guardado: vence en {dias} dias.")
     except Exception as e:
         print(f"No se pudo renovar el token: {e}")
 
@@ -1126,13 +1181,14 @@ def publicar():
             avisar(f"⚠️ No se pudo subir a YouTube: {e}")
 
     # TikTok: queda como borrador en tu bandeja para terminarlo desde la app
-    if TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET and TIKTOK_REFRESH_TOKEN:
+    if TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET and leer_token("tiktok", TIKTOK_REFRESH_TOKEN):
         try:
             subir_a_tiktok(os.path.join("sitio", p["archivos"][0]))
             avisar("🎵 Enviado a TikTok. Abrí la app: te llega una notificación con el borrador. "
                    "Agregale un sonido en tendencia (bajito), pegá el texto de arriba y publicalo.")
         except Exception as e:
             avisar(f"⚠️ No se pudo enviar a TikTok: {e}")
+        subir_cambios("Token de TikTok")                     # guarda el token renovado
 
 if __name__ == "__main__":
     try:
