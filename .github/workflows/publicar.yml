@@ -8,10 +8,14 @@ on:
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
-        description: "normal = pide aprobacion y publica | prueba = solo manda a Telegram"
+        description: "normal = pide aprobacion y publica | prueba = solo Telegram | tiktok_link / tiktok_token = conectar TikTok"
         default: "normal"
         type: choice
-        options: [normal, prueba]
+        options: [normal, prueba, web, tiktok_link, tiktok_token]
+      codigo:
+        description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -35,6 +39,14 @@ jobs:
       PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
       PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
       YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+      YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+      YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+      YT_PRIVACIDAD: ${{ secrets.YT_PRIVACIDAD }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,17 +65,17 @@ jobs:
         run: python noticias_bot.py ${{ github.event.inputs.modo || 'normal' }}
 
       - name: Subir archivos a GitHub Pages
-        if: hashFiles('pendiente.json') != ''
+        if: hashFiles('sitio/index.html') != ''
         uses: actions/upload-pages-artifact@v3
         with:
           path: sitio
 
       - name: Publicar GitHub Pages
-        if: hashFiles('pendiente.json') != ''
+        if: hashFiles('sitio/index.html') != ''
         id: pages
         uses: actions/deploy-pages@v4
 
-      - name: Publicar en Instagram
+      - name: Publicar en Instagram, YouTube y TikTok
         if: hashFiles('pendiente.json') != ''
         env:
           PAGES_URL: ${{ steps.pages.outputs.page_url }}
