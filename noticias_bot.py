@@ -83,6 +83,15 @@ IG_TOKEN = os.environ.get("IG_TOKEN", "")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+YT_CLIENT_ID = os.environ.get("YT_CLIENT_ID", "")
+YT_CLIENT_SECRET = os.environ.get("YT_CLIENT_SECRET", "")
+YT_REFRESH_TOKEN = os.environ.get("YT_REFRESH_TOKEN", "")
+# Mientras Google no audite el proyecto, YouTube solo acepta videos privados.
+# Cuando lo aprueben, crea el secreto YT_PRIVACIDAD con el valor "public".
+YT_PRIVACIDAD = os.environ.get("YT_PRIVACIDAD", "") or "private"
+TIKTOK_CLIENT_KEY = os.environ.get("TIKTOK_CLIENT_KEY", "")
+TIKTOK_CLIENT_SECRET = os.environ.get("TIKTOK_CLIENT_SECRET", "")
+TIKTOK_REFRESH_TOKEN = os.environ.get("TIKTOK_REFRESH_TOKEN", "")
 IG_API = "https://graph.instagram.com/v25.0"
 ARGENTINA = timezone(timedelta(hours=-3))
 CARPETA = "publicaciones"
@@ -481,12 +490,34 @@ def video_apto(etiquetas, busqueda):
     return not any(p in etiquetas and p not in pedido for p in PROHIBIDAS_VIDEO)
 
 
+def video_valido(ruta):
+    """Confirma con ffprobe que el archivo es un video que se puede abrir."""
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                        "stream=width", "-of", "csv=p=0", ruta], capture_output=True, text=True)
+    return r.returncode == 0 and r.stdout.strip().isdigit()
+
+
 def _bajar_video(url, carpeta, usados, clave):
+    """Baja el video y verifica que sea valido. Devuelve la ruta o None."""
+    usados.add(clave)                                     # no reintentar este mismo video
     ruta = os.path.join(carpeta, f"fondo{len(usados)}.mp4")
-    with open(ruta, "wb") as f:
-        f.write(requests.get(url, timeout=60, headers={"User-Agent": "Mozilla/5.0"}).content)
-    usados.add(clave)
-    return ruta
+    try:
+        r = requests.get(url, timeout=90, headers={"User-Agent": "Mozilla/5.0",
+                                                    "Referer": "https://pixabay.com/"})
+        tipo = r.headers.get("Content-Type", "")
+        if r.status_code != 200 or len(r.content) < 50_000 or "html" in tipo:
+            print(f"Descarga invalida ({r.status_code}, {tipo}, {len(r.content)} bytes): {url[:80]}")
+            return None
+        with open(ruta, "wb") as f:
+            f.write(r.content)
+        if not video_valido(ruta):
+            print(f"El archivo bajado no es un video valido: {url[:80]}")
+            os.remove(ruta)
+            return None
+        return ruta
+    except Exception as e:
+        print(f"No se pudo bajar el video: {e}")
+        return None
 
 
 def buscar_video(busqueda, carpeta, usados):
@@ -507,8 +538,10 @@ def buscar_video(busqueda, carpeta, usados):
                             if o.get("url") and 720 <= (o.get("height") or 0) <= 2200]
                 if not opciones:
                     continue
-                elegido = max(opciones, key=lambda o: o["height"])
-                return _bajar_video(elegido["url"], carpeta, usados, clave), f"Pixabay ({v.get('user', '')})"
+                for o in sorted(opciones, key=lambda o: -o["height"])[:2]:   # si falla la grande, prueba otra
+                    ruta = _bajar_video(o["url"], carpeta, usados, clave)
+                    if ruta:
+                        return ruta, f"Pixabay ({v.get('user', '')})"
         except Exception as e:
             print(f"Pixabay no respondio para '{busqueda}': {e}")
     if PEXELS_API_KEY:
@@ -526,8 +559,9 @@ def buscar_video(busqueda, carpeta, usados):
                 if not archivos:
                     continue
                 elegido = min(archivos, key=lambda f: abs(f["height"] - 1920))
-                return (_bajar_video(elegido["link"], carpeta, usados, clave),
-                        f"Pexels ({v.get('user', {}).get('name', '')})")
+                ruta = _bajar_video(elegido["link"], carpeta, usados, clave)
+                if ruta:
+                    return ruta, f"Pexels ({v.get('user', {}).get('name', '')})"
         except Exception as e:
             print(f"Pexels no respondio para '{busqueda}': {e}")
     return None, None
@@ -595,10 +629,18 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         else:
             entrada = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
             base = "[0:v]setsar=1[f]"
-        filtro = (f"{base};[f][1:v]overlay=0:0,fade=t=in:st=0:d=0.25,"
-                  f"fade=t=out:st={dur - 0.25:.2f}:d=0.25,format=yuv420p")
-        correr(["ffmpeg", "-y", *entrada, "-i", seg["capa"], "-filter_complex", filtro, "-t", f"{dur:.3f}",
-                "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-r", str(fps), clip])
+        fin = (f"[f][1:v]overlay=0:0,fade=t=in:st=0:d=0.25,"
+               f"fade=t=out:st={dur - 0.25:.2f}:d=0.25,format=yuv420p")
+        salida_clip = ["-t", f"{dur:.3f}", "-an", "-c:v", "libx264", "-preset", "veryfast",
+                       "-crf", "26", "-r", str(fps), clip]
+        try:
+            correr(["ffmpeg", "-y", *entrada, "-i", seg["capa"], "-filter_complex", f"{base};{fin}", *salida_clip])
+        except RuntimeError as e:
+            if not seg.get("fondo"):
+                raise
+            print(f"Fallo el video de fondo de la parte {i + 1}, uso fondo liso. ({e})")
+            liso = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
+            correr(["ffmpeg", "-y", *liso, "-i", seg["capa"], "-filter_complex", f"[0:v]setsar=1[f];{fin}", *salida_clip])
         clips.append(clip)
     # La portada (para la historia) es un cuadro del gancho
     correr(["ffmpeg", "-y", "-ss", "1", "-i", clips[0], "-frames:v", "1", "-q:v", "2", portada_salida])
@@ -780,6 +822,138 @@ def publicar_en_instagram(url_reel, url_portada, caption):
     return link, yo.get("username", ""), historia_ok
 
 
+def subir_a_youtube(ruta_video, titulo, descripcion):
+    """Sube el Reel como Short a YouTube. Devuelve el link o lanza un error."""
+    tok = requests.post("https://oauth2.googleapis.com/token", timeout=30, data={
+        "client_id": YT_CLIENT_ID, "client_secret": YT_CLIENT_SECRET,
+        "refresh_token": YT_REFRESH_TOKEN, "grant_type": "refresh_token"}).json()
+    if "access_token" not in tok:
+        raise RuntimeError(f"YouTube no dio acceso: {tok.get('error_description') or tok}")
+    cab = {"Authorization": f"Bearer {tok['access_token']}"}
+    titulo = (titulo[:90] + " #Shorts").replace("<", "").replace(">", "")
+    meta = {"snippet": {"title": titulo, "description": descripcion[:4900].replace("<", "").replace(">", ""),
+                        "categoryId": "25", "defaultLanguage": "es", "tags": ["noticias", "viral", "QLQ"]},
+            "status": {"privacyStatus": YT_PRIVACIDAD, "selfDeclaredMadeForKids": False}}
+    tam = os.path.getsize(ruta_video)
+    ini = requests.post("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+                        timeout=60, json=meta, headers={**cab, "X-Upload-Content-Type": "video/mp4",
+                                                        "X-Upload-Content-Length": str(tam)})
+    if ini.status_code != 200 or "Location" not in ini.headers:
+        raise RuntimeError(f"YouTube rechazo la subida: {ini.text[:300]}")
+    with open(ruta_video, "rb") as f:
+        r = requests.put(ini.headers["Location"], data=f, timeout=600,
+                         headers={**cab, "Content-Type": "video/mp4", "Content-Length": str(tam)})
+    if r.status_code not in (200, 201):
+        raise RuntimeError(f"YouTube fallo al subir: {r.text[:300]}")
+    return f"https://youtube.com/shorts/{r.json()['id']}"
+
+
+# ======================== PAGINAS WEB (las pide TikTok) ========================
+def url_web():
+    dueno, nombre = os.environ.get("GITHUB_REPOSITORY", "usuario/repo").split("/")
+    return f"https://{dueno.lower()}.github.io/{nombre}"
+
+
+_ESTILO = ("<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+           "<style>body{font-family:system-ui,sans-serif;background:#0e111c;color:#f5f5f5;max-width:720px;"
+           "margin:auto;padding:24px;line-height:1.6}h1{color:#ffc400}a{color:#ffc400}"
+           "code{background:#222838;padding:10px;display:block;word-break:break-all;font-size:15px}</style>")
+
+
+def preparar_web():
+    """Crea las paginas publicas que pide TikTok (inicio, privacidad, terminos y la de autorizacion).
+    Se publican en GitHub Pages junto con los videos."""
+    os.makedirs("sitio", exist_ok=True)
+    paginas = {
+        "index.html": f"""<title>QueloQue Viral</title>{_ESTILO}<h1>QueloQue Viral</h1>
+<p>Lo más viral del mundo, contado en español y en 30 segundos. Resúmenes de noticias con fuentes citadas,
+publicados en Instagram, YouTube y TikTok como {NOMBRE_CUENTA}.</p>
+<p><a href='privacidad.html'>Política de privacidad</a> · <a href='terminos.html'>Términos de servicio</a></p>""",
+        "privacidad.html": f"""<title>Privacidad - QueloQue Viral</title>{_ESTILO}<h1>Política de privacidad</h1>
+<p>QueloQue Viral es una herramienta de uso personal que publica videos en las cuentas propias de
+{NOMBRE_CUENTA}. No recopila, vende ni comparte datos de otras personas.</p>
+<p>Los permisos otorgados por Instagram, YouTube y TikTok se usan exclusivamente para publicar contenido
+en las cuentas del propio titular. Los accesos se guardan de forma cifrada y pueden revocarse en cualquier
+momento desde la configuración de cada plataforma.</p>
+<p>Contacto: a través de {NOMBRE_CUENTA} en Instagram.</p>""",
+        "terminos.html": f"""<title>Términos - QueloQue Viral</title>{_ESTILO}<h1>Términos de servicio</h1>
+<p>QueloQue Viral es una herramienta privada de publicación de contenido propio para las cuentas de
+{NOMBRE_CUENTA}. No ofrece servicios a terceros ni permite que otras personas conecten sus cuentas.</p>
+<p>El contenido publicado resume noticias con sus fuentes citadas y usa imágenes y música libres de derechos.</p>""",
+        "tiktok_callback.html": f"""<title>Autorización TikTok</title>{_ESTILO}<h1>Autorización de TikTok</h1>
+<p id='m'>Buscando el código...</p><code id='c'></code>
+<script>
+const p = new URLSearchParams(location.search);
+const c = p.get('code');
+document.getElementById('m').textContent = c
+  ? 'Listo. Copia este código completo y pégalo en GitHub (Run workflow → modo tiktok_token). Vence en pocos minutos.'
+  : 'No llegó ningún código. Error: ' + (p.get('error_description') || p.get('error') || 'desconocido');
+document.getElementById('c').textContent = c || '';
+</script>""",
+    }
+    for nombre, contenido in paginas.items():
+        with open(os.path.join("sitio", nombre), "w", encoding="utf-8") as f:
+            f.write("<!doctype html><html lang='es'><head>" + contenido.replace("<h1>", "</head><body><h1>", 1)
+                    + "</body></html>")
+
+
+# ======================== TIKTOK ========================
+TIKTOK_API = "https://open.tiktokapis.com/v2"
+
+
+def tiktok_redirect():
+    return f"{url_web()}/tiktok_callback.html"
+
+
+def tiktok_link_autorizacion():
+    q = urllib.parse.urlencode({"client_key": TIKTOK_CLIENT_KEY, "response_type": "code",
+                                "scope": "user.info.basic,video.upload", "redirect_uri": tiktok_redirect(),
+                                "state": "qlq"})
+    return f"https://www.tiktok.com/v2/auth/authorize/?{q}"
+
+
+def tiktok_token(datos):
+    r = requests.post(f"{TIKTOK_API}/oauth/token/", timeout=30, data={
+        "client_key": TIKTOK_CLIENT_KEY, "client_secret": TIKTOK_CLIENT_SECRET, **datos},
+        headers={"Content-Type": "application/x-www-form-urlencoded"}).json()
+    if "access_token" not in r:
+        raise RuntimeError(f"TikTok no dio acceso: {r.get('error_description') or r}")
+    return r
+
+
+def tiktok_canjear_codigo(codigo):
+    """Una sola vez: cambia el codigo de autorizacion por el token de larga duracion y lo manda a Telegram."""
+    r = tiktok_token({"code": codigo.strip(), "grant_type": "authorization_code",
+                      "redirect_uri": tiktok_redirect()})
+    avisar("🔑 TikTok conectado. Crea en GitHub el secreto TIKTOK_REFRESH_TOKEN con este valor "
+           f"(dura un año):\n\n{r['refresh_token']}")
+
+
+def subir_a_tiktok(ruta_video):
+    """Manda el video a la bandeja de TikTok como borrador (no requiere auditoria)."""
+    tok = tiktok_token({"grant_type": "refresh_token", "refresh_token": TIKTOK_REFRESH_TOKEN})
+    if tok.get("refresh_token") and tok["refresh_token"] != TIKTOK_REFRESH_TOKEN:
+        avisar("🔑 TikTok renovó su token. Reemplaza el secreto TIKTOK_REFRESH_TOKEN en GitHub por:\n\n"
+               + tok["refresh_token"])
+    tam = os.path.getsize(ruta_video)
+    if tam > 64 * 1024 * 1024:
+        raise RuntimeError("El video pesa mas de 64 MB.")
+    ini = requests.post(f"{TIKTOK_API}/post/publish/inbox/video/init/", timeout=60,
+                        headers={"Authorization": f"Bearer {tok['access_token']}",
+                                 "Content-Type": "application/json; charset=UTF-8"},
+                        json={"source_info": {"source": "FILE_UPLOAD", "video_size": tam,
+                                              "chunk_size": tam, "total_chunk_count": 1}}).json()
+    datos = ini.get("data") or {}
+    if not datos.get("upload_url"):
+        raise RuntimeError(f"TikTok rechazo la subida: {(ini.get('error') or {}).get('message') or ini}")
+    with open(ruta_video, "rb") as f:
+        r = requests.put(datos["upload_url"], data=f, timeout=600, headers={
+            "Content-Type": "video/mp4", "Content-Length": str(tam), "Content-Range": f"bytes 0-{tam - 1}/{tam}"})
+    if r.status_code not in (200, 201):
+        raise RuntimeError(f"TikTok fallo al subir el video ({r.status_code}): {r.text[:200]}")
+    return datos.get("publish_id", "")
+
+
 def renovar_token():
     """Extiende la vida del token (dura 60 dias). Si cambia, te avisa para actualizarlo."""
     try:
@@ -804,6 +978,7 @@ def main():
         print("Faltan secretos: " + ", ".join(faltan))
         sys.exit(1)
 
+    preparar_web()
     id_corrida = datetime.now(ARGENTINA).strftime("%Y%m%d-%H%M")
     historial = []
     if os.path.exists(HISTORIAL):
@@ -917,10 +1092,40 @@ def publicar():
     avisar(f"✅ Reel publicado en @{usuario}\n{link}" +
            ("\n📲 Historia publicada" if historia_ok else "\n⚠️ La historia no se pudo publicar"))
 
+    # YouTube Shorts (si estan las claves). Un error aca no afecta a Instagram.
+    if YT_CLIENT_ID and YT_CLIENT_SECRET and YT_REFRESH_TOKEN:
+        try:
+            reel = os.path.join("sitio", p["archivos"][0])
+            link_yt = subir_a_youtube(reel, p["titulos"][0], p["caption"])
+            extra = ("\n🔒 Quedo PRIVADO (YouTube exige auditoria para publicar por API). "
+                     "Para publicarlo: YouTube Studio → Contenido → Visibilidad → Publico.") if YT_PRIVACIDAD != "public" else ""
+            avisar(f"▶️ Subido a YouTube Shorts\n{link_yt}{extra}")
+        except Exception as e:
+            avisar(f"⚠️ No se pudo subir a YouTube: {e}")
+
+    # TikTok: queda como borrador en tu bandeja para terminarlo desde la app
+    if TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET and TIKTOK_REFRESH_TOKEN:
+        try:
+            subir_a_tiktok(os.path.join("sitio", p["archivos"][0]))
+            avisar("🎵 Enviado a TikTok. Abrí la app: te llega una notificación con el borrador. "
+                   "Agregale un sonido en tendencia (bajito), pegá el texto de arriba y publicalo.")
+        except Exception as e:
+            avisar(f"⚠️ No se pudo enviar a TikTok: {e}")
+
 if __name__ == "__main__":
     try:
-        if len(sys.argv) > 1 and sys.argv[1] == "publicar":
+        modo = sys.argv[1] if len(sys.argv) > 1 else ""
+        if modo == "publicar":
             publicar()
+        elif modo == "web":
+            preparar_web()
+            print("Paginas listas.")
+        elif modo == "tiktok_link":
+            preparar_web()
+            avisar("Abrí este link en el celular, entrá con @queloqueviral y autorizá:\n\n" + tiktok_link_autorizacion())
+        elif modo == "tiktok_token":
+            preparar_web()
+            tiktok_canjear_codigo(os.environ.get("TIKTOK_CODIGO", ""))
         else:
             main()
     except Exception as e:
