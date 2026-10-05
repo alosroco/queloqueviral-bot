@@ -83,7 +83,8 @@ TENDENCIAS_RSS = {p: f"https://trends.google.com/trending/rss?geo={p}" for p in 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
-IG_TOKEN = os.environ.get("IG_TOKEN", "")
+IG_TOKEN = os.environ.get("IG_TOKEN", "").strip()
+IG_TOKEN_SECRETO = IG_TOKEN
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
@@ -93,9 +94,9 @@ YT_REFRESH_TOKEN = os.environ.get("YT_REFRESH_TOKEN", "")
 # Mientras Google no audite el proyecto, YouTube solo acepta videos privados.
 # Cuando lo aprueben, crea el secreto YT_PRIVACIDAD con el valor "public".
 YT_PRIVACIDAD = os.environ.get("YT_PRIVACIDAD", "") or "private"
-TIKTOK_CLIENT_KEY = os.environ.get("TIKTOK_CLIENT_KEY", "")
-TIKTOK_CLIENT_SECRET = os.environ.get("TIKTOK_CLIENT_SECRET", "")
-TIKTOK_REFRESH_TOKEN = os.environ.get("TIKTOK_REFRESH_TOKEN", "")
+TIKTOK_CLIENT_KEY = os.environ.get("TIKTOK_CLIENT_KEY", "").strip()
+TIKTOK_CLIENT_SECRET = os.environ.get("TIKTOK_CLIENT_SECRET", "").strip()
+TIKTOK_REFRESH_TOKEN = os.environ.get("TIKTOK_REFRESH_TOKEN", "").strip()
 
 
 # ---------- Boveda de tokens ----------
@@ -686,7 +687,9 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         else:
             entrada = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
             base = "[0:v]setsar=1[f]"
-        fin = (f"[f][1:v]overlay=0:0,fade=t=in:st=0:d=0.25,"
+        # El primer fotograma del video NO puede ser negro: es la miniatura en el feed
+        entrada_fade = "" if i == 0 else "fade=t=in:st=0:d=0.25,"
+        fin = (f"[f][1:v]overlay=0:0,{entrada_fade}"
                f"fade=t=out:st={dur - 0.25:.2f}:d=0.25,format=yuv420p")
         salida_clip = ["-t", f"{dur:.3f}", "-an", "-c:v", "libx264", "-preset", "veryfast",
                        "-crf", "26", "-r", str(fps), clip]
@@ -807,13 +810,24 @@ def esperar_respuesta(id_corrida):
 
 
 # ======================== 5. INSTAGRAM ========================
-def ig(metodo, ruta, **datos):
-    datos["access_token"] = IG_TOKEN
+def ig(metodo, ruta, _reintento=True, **datos):
+    global IG_TOKEN
     url = f"{IG_API}/{ruta}"
-    r = requests.post(url, data=datos, timeout=60) if metodo == "POST" else requests.get(url, params=datos, timeout=60)
+    params = dict(datos, access_token=IG_TOKEN)
+    r = requests.post(url, data=params, timeout=60) if metodo == "POST" else requests.get(url, params=params, timeout=60)
     js = r.json()
     if "error" in js:
-        raise RuntimeError(f"Instagram: {js['error'].get('message')}")
+        err = js["error"]
+        # Token invalido: si el guardado no sirve, probamos con el del secreto (por si lo actualizaste)
+        if err.get("code") == 190 and _reintento and IG_TOKEN_SECRETO and IG_TOKEN != IG_TOKEN_SECRETO:
+            print("El token guardado no sirve; pruebo con el del secreto IG_TOKEN.")
+            IG_TOKEN = IG_TOKEN_SECRETO
+            guardar_token("instagram", IG_TOKEN)
+            return ig(metodo, ruta, _reintento=False, **datos)
+        if err.get("code") == 190:
+            raise RuntimeError("El token de Instagram no es valido. Genera uno nuevo en Meta for Developers "
+                               "y actualiza el secreto IG_TOKEN en GitHub.")
+        raise RuntimeError(f"Instagram: {err.get('message')}")
     return js
 
 
@@ -861,7 +875,7 @@ def publicar_en_instagram(url_reel, url_portada, caption):
     yo = ig("GET", "me", fields="user_id,username")
     ig_id = yo["user_id"]
     reel = ig("POST", f"{ig_id}/media", media_type="REELS", video_url=url_reel,
-              caption=caption, share_to_feed="true")["id"]
+              cover_url=url_portada, caption=caption, share_to_feed="true")["id"]
     esperar_contenedor(reel)
     media = ig("POST", f"{ig_id}/media_publish", creation_id=reel)["id"]
     link = ig("GET", media, fields="permalink").get("permalink", "")
