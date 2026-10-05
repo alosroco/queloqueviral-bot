@@ -81,6 +81,7 @@ TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 IG_TOKEN = os.environ.get("IG_TOKEN", "")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
+PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 IG_API = "https://graph.instagram.com/v25.0"
 ARGENTINA = timezone(timedelta(hours=-3))
@@ -302,7 +303,7 @@ ESTRUCTURA:
   Para cada placa: "titulo" (2 a 4 palabras, ej: "Que paso", "El dato clave", "Que sigue"),
   "pantalla" (texto para leer, maximo 140 caracteres) y "voz" (lo que dice la voz en off,
   1 o 2 oraciones, maximo 30 palabras).
-- Para el gancho y cada placa, "video": 2 o 3 palabras EN INGLES para buscar un video de stock que
+- Para el gancho y cada placa, "video": 1 a 3 palabras EN INGLES para buscar un video de stock que
   ilustre esa parte (ej: "dog walking road", "football stadium crowd", "smartphone hands").
   Nada de personas famosas ni marcas: escenas genericas.
 - Si alguna informacion viene de un video de YouTube, nombra al canal como fuente en "pantalla" o "voz".
@@ -440,7 +441,8 @@ def capa_cierre(medios, creadores, autores_video, ruta):
     bloques = [("Fuentes", ", ".join(medios))]
     if creadores:
         bloques.append(("Video viral", ", ".join(creadores)))
-    bloques.append(("Imágenes", "Pexels" + (f" ({', '.join(autores_video[:3])})" if autores_video else "")))
+    if autores_video:
+        bloques.append(("Imágenes", ", ".join(autores_video[:3])))
     for titulo, texto in bloques:
         y = escribir(d, titulo, fuente(True, 38), ACENTO, y)
         y = escribir(d, texto, fuente(False, 38), TEXTO, y + 2, 1.3) + 35
@@ -454,29 +456,54 @@ def capa_cierre(medios, creadores, autores_video, ruta):
     img.save(ruta)
 
 
+def _bajar_video(url, carpeta, usados, clave):
+    ruta = os.path.join(carpeta, f"fondo{len(usados)}.mp4")
+    with open(ruta, "wb") as f:
+        f.write(requests.get(url, timeout=60, headers={"User-Agent": "Mozilla/5.0"}).content)
+    usados.add(clave)
+    return ruta
+
+
 def buscar_video(busqueda, carpeta, usados):
-    """Busca en Pexels un video vertical libre de derechos. Devuelve (archivo, autor) o (None, None)."""
-    if not PEXELS_API_KEY or not busqueda:
+    """Busca un video libre de derechos (Pixabay o Pexels).
+    Devuelve (archivo, credito) o (None, None)."""
+    if not busqueda:
         return None, None
-    try:
-        r = requests.get("https://api.pexels.com/videos/search", timeout=20,
-                         headers={"Authorization": PEXELS_API_KEY},
-                         params={"query": busqueda, "orientation": "portrait", "per_page": 10}).json()
-        for v in r.get("videos", []):
-            if v["id"] in usados or v.get("duration", 0) < 4:
-                continue
-            archivos = [f for f in v.get("video_files", []) if f.get("file_type") == "video/mp4"
-                        and (f.get("height") or 0) >= 1280 and (f.get("height") or 0) <= 2400]
-            if not archivos:
-                continue
-            elegido = min(archivos, key=lambda f: abs(f["height"] - 1920))
-            ruta = os.path.join(carpeta, f"fondo{len(usados)}.mp4")
-            with open(ruta, "wb") as f:
-                f.write(requests.get(elegido["link"], timeout=60).content)
-            usados.add(v["id"])
-            return ruta, v.get("user", {}).get("name", "")
-    except Exception as e:
-        print(f"Pexels no respondio para '{busqueda}': {e}")
+    if PIXABAY_API_KEY:
+        try:
+            r = requests.get("https://pixabay.com/api/videos/", timeout=20, params={
+                "key": PIXABAY_API_KEY, "q": busqueda[:100], "safesearch": "true",
+                "per_page": 20, "video_type": "film"}).json()
+            for v in r.get("hits", []):
+                clave = f"pb{v['id']}"
+                if clave in usados or v.get("duration", 0) < 4:
+                    continue
+                opciones = [o for o in (v.get("videos") or {}).values()
+                            if o.get("url") and 720 <= (o.get("height") or 0) <= 2200]
+                if not opciones:
+                    continue
+                elegido = max(opciones, key=lambda o: o["height"])
+                return _bajar_video(elegido["url"], carpeta, usados, clave), f"Pixabay ({v.get('user', '')})"
+        except Exception as e:
+            print(f"Pixabay no respondio para '{busqueda}': {e}")
+    if PEXELS_API_KEY:
+        try:
+            r = requests.get("https://api.pexels.com/videos/search", timeout=20,
+                             headers={"Authorization": PEXELS_API_KEY},
+                             params={"query": busqueda, "orientation": "portrait", "per_page": 10}).json()
+            for v in r.get("videos", []):
+                clave = f"px{v['id']}"
+                if clave in usados or v.get("duration", 0) < 4:
+                    continue
+                archivos = [f for f in v.get("video_files", []) if f.get("file_type") == "video/mp4"
+                            and 1280 <= (f.get("height") or 0) <= 2400]
+                if not archivos:
+                    continue
+                elegido = min(archivos, key=lambda f: abs(f["height"] - 1920))
+                return (_bajar_video(elegido["link"], carpeta, usados, clave),
+                        f"Pexels ({v.get('user', {}).get('name', '')})")
+        except Exception as e:
+            print(f"Pexels no respondio para '{busqueda}': {e}")
     return None, None
 
 
@@ -579,16 +606,19 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida):
     return total, bool(voces), bool(temas)
 
 
-def texto_publicacion(g, medios, creadores):
+def texto_publicacion(g, medios, creadores, bancos):
     etiquetas = list(dict.fromkeys(HASHTAGS_FIJOS + [h if h.startswith("#") else "#" + h
                                                       for h in g.get("hashtags", [])]))[:12]
-    extra = f"\n🎥 Video viral: {', '.join(creadores)}" if creadores else ""
-    return (f"🔥 {g['gancho']}\n\n{g['descripcion']}\n\n📌 Fuentes: {', '.join(medios) or 'ver video citado'}{extra}\n"
-            f"🎞 Imágenes de fondo: Pexels\n"
-            f"Resumen elaborado a partir de lo publicado por los medios citados.\n\n"
-            f"Síguenos en {NOMBRE_CUENTA} para enterarte de lo más viral del mundo.\n"
-            f"🟡 {FIRMA} | QueloQue Viral\n\n"
-            + " ".join(etiquetas))[:2150]
+    lineas = [f"🔥 {g['gancho']}", "", g["descripcion"], "",
+              f"📌 Fuentes: {', '.join(medios) or 'ver video citado'}"]
+    if creadores:
+        lineas.append(f"🎥 Video viral: {', '.join(creadores)}")
+    if bancos:
+        lineas.append(f"🎞 Imágenes: {', '.join(bancos)}")
+    lineas += ["Resumen elaborado a partir de lo publicado por los medios citados.", "",
+               f"Síguenos en {NOMBRE_CUENTA} para enterarte de lo más viral del mundo.",
+               f"🟡 {FIRMA} | QueloQue Viral", "", " ".join(etiquetas)]
+    return "\n".join(lineas)[:2150]
 
 
 # ======================== 4. TELEGRAM ========================
@@ -803,7 +833,8 @@ def main():
     reel = os.path.join(carpeta, f"reel-{id_corrida}.mp4")
     portada = os.path.join(carpeta, f"portada-{id_corrida}.jpg")
     total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada)
-    caption = texto_publicacion(guion, medios, creadores)
+    bancos = sorted({a.split(' (')[0] for a in autores})
+    caption = texto_publicacion(guion, medios, creadores, bancos)
     sin_fondo = sum(1 for sg in segmentos[:-1] if not sg["fondo"])
 
     nota = []
@@ -812,7 +843,7 @@ def main():
     if not con_musica:
         nota.append("sin musica (no hay archivos en la carpeta 'musica')")
     if sin_fondo:
-        nota.append(f"{sin_fondo} partes sin video de fondo (Pexels no encontro o falta la clave)")
+        nota.append(f"{sin_fondo} partes sin video de fondo (no se encontro video o falta la clave de Pixabay)")
     mandar_borrador(reel, caption, id_corrida, modo_prueba,
                     f"ℹ️ Reel de {total:.0f} segundos" + (" — " + "; ".join(nota) if nota else ""))
     if modo_prueba:

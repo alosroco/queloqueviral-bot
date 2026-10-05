@@ -1,0 +1,70 @@
+name: QueloQue Viral
+
+on:
+  schedule:
+    - cron: "0 12 * * *"   # 9:00 Argentina / 6:00 Mexico
+    - cron: "0 17 * * *"   # 14:00 Argentina / 11:00 Mexico
+    - cron: "0 23 * * *"   # 20:00 Argentina / 17:00 Mexico
+  workflow_dispatch:        # boton para correrlo a mano
+    inputs:
+      modo:
+        description: "normal = pide aprobacion y publica | prueba = solo manda a Telegram"
+        default: "normal"
+        type: choice
+        options: [normal, prueba]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: resumen-viral
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    environment:
+      name: github-pages
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      IG_TOKEN: ${{ secrets.IG_TOKEN }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core > /dev/null
+      - run: pip install -q -r requirements.txt
+      - name: Tipografia de la marca (Poppins)
+        run: |
+          mkdir -p fonts
+          for f in Bold Medium; do
+            curl -sfL -o fonts/Poppins-$f.ttf https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-$f.ttf || true
+          done
+
+      - name: Armar el Reel y pedir aprobacion
+        run: python noticias_bot.py ${{ github.event.inputs.modo || 'normal' }}
+
+      - name: Subir archivos a GitHub Pages
+        if: hashFiles('pendiente.json') != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: sitio
+
+      - name: Publicar GitHub Pages
+        if: hashFiles('pendiente.json') != ''
+        id: pages
+        uses: actions/deploy-pages@v4
+
+      - name: Publicar en Instagram
+        if: hashFiles('pendiente.json') != ''
+        env:
+          PAGES_URL: ${{ steps.pages.outputs.page_url }}
+        run: python noticias_bot.py publicar
