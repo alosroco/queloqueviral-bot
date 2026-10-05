@@ -895,6 +895,12 @@ document.getElementById('c').textContent = c || '';
         with open(os.path.join("sitio", nombre), "w", encoding="utf-8") as f:
             f.write("<!doctype html><html lang='es'><head>" + contenido.replace("<h1>", "</head><body><h1>", 1)
                     + "</body></html>")
+    # Archivos de verificacion (TikTok, Google, etc.): todo lo que este en la carpeta "verificacion"
+    if os.path.isdir("verificacion"):
+        for archivo in os.listdir("verificacion"):
+            ruta = os.path.join("verificacion", archivo)
+            if os.path.isfile(ruta):
+                shutil.copy(ruta, "sitio")
 
 
 # ======================== TIKTOK ========================
