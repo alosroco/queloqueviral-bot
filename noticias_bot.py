@@ -35,7 +35,7 @@ import hashlib
 
 import requests
 from cryptography.fernet import Fernet, InvalidToken
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
 # ======================== CONFIGURACION ========================
 NOMBRE_CUENTA = "@queloqueviral"            # Cambialo por tu usuario de Instagram
@@ -44,7 +44,7 @@ ESPERA_APROBACION_MIN = 25                # Si no respondes en este tiempo, se d
 MODELO_IA = "claude-sonnet-5-5"
 VOZ = "es-US-AlonsoNeural"               # Voz neutra. Femenina: "es-US-PalomaNeural"
 VELOCIDAD_VOZ = "+15%"
-VOLUMEN_MUSICA = 0.10                     # 0.10 = bajito, debajo de la voz
+VOLUMEN_MUSICA = 0.25                     # volumen de la musica (baja sola cuando habla la voz)
 CARPETA_MUSICA = "musica"                 # Pone ahi archivos .mp3 libres de derechos
 HASHTAGS_FIJOS = ["#QLQ", "#QueloQueViral", "#noticias", "#viral", "#noticiasdehoy"]
 
@@ -378,12 +378,18 @@ ESTRUCTURA:
   * NUNCA pidas banderas, mapas, textos, numeros, anos, elecciones ni simbolos politicos.
   * Si la noticia ocurre en un lugar, usa una escena de ESE lugar (ej: "madrid street", "tokyo night"),
     nunca de otro pais.
+- FOTOS REALES: para el gancho ("imagen_gancho") y cada placa ("imagen"), indica el PROTAGONISTA concreto
+  de esa parte tal como se llama su articulo de Wikipedia (ej: "Lionel Messi", "Torre Eiffel",
+  "Inter Miami CF", "Tokio", "SpaceX Starship"). Solo personas publicas, lugares, equipos, empresas,
+  edificios, objetos o eventos conocidos. Completa "imagen" en TODAS las partes que puedas: si una parte no
+  tiene un protagonista propio, repite el protagonista principal de la noticia o usa el lugar donde ocurre.
+  Deja "" solo si no hay ninguno. Nunca personas privadas ni victimas.
 - Si alguna informacion viene de un video de YouTube, nombra al canal como fuente en "pantalla" o "voz".
 
 Responde SOLO con JSON valido:
 {{"categoria": "UNA PALABRA EN MAYUSCULAS",
-"gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...",
-"placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "..."}}, (3 placas en total)],
+"gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...", "imagen_gancho": "...",
+"placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "...", "imagen": "..."}}, (3 placas en total)],
 "pregunta": "...",
 "tono": "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es una noticia importante, triste o delicada,
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
@@ -532,6 +538,140 @@ def capa_cierre(medios, creadores, autores_video, ruta, pregunta=""):
     img.save(ruta)
 
 
+# ======================== FOTOS REALES (Wikimedia Commons) ========================
+WIKI_UA = {"User-Agent": "QueloQueViralBot/1.0 (https://alosroco.github.io/queloqueviral-bot/)"}
+FOTO_NO = ("flag", "bandera", "map", "mapa", "logo", "coat of arms", "escudo", "signature", "firma",
+           "diagram", "chart", "icon", "seal", "location", ".svg")
+
+
+def _licencia_ok(lic):
+    lic = (lic or "").lower()
+    if "nc" in lic.replace("-", " ").split() or "noncommercial" in lic or " nd" in lic or "-nd" in lic:
+        return False
+    return any(x in lic for x in ("cc by", "cc-by", "cc0", "public domain", "dominio público", "pd"))
+
+
+TIPOS_VIDEO = ("video/webm", "video/ogg", "application/ogg", "video/mp4")
+
+
+def _info_commons(params, videos=False):
+    params.update({"action": "query", "format": "json", "prop": "imageinfo",
+                   "iiprop": "url|extmetadata|size|mime", "iiurlwidth": 1600})
+    r = requests.get("https://commons.wikimedia.org/w/api.php", params=params, headers=WIKI_UA, timeout=20).json()
+    fotos = []
+    for pg in (r.get("query", {}).get("pages") or {}).values():
+        if "missing" in pg or not pg.get("imageinfo"):
+            continue
+        ii = pg["imageinfo"][0]
+        meta = ii.get("extmetadata", {})
+        titulo = pg.get("title", "").lower()
+        lic = meta.get("LicenseShortName", {}).get("value", "")
+        tipos_ok = TIPOS_VIDEO if videos else ("image/jpeg", "image/png")
+        if (ii.get("mime") not in tipos_ok or ii.get("width", 0) < (640 if videos else 700)
+                or (videos and ii.get("size", 0) > 80 * 1024 * 1024)
+                or any(p in titulo for p in FOTO_NO) or not _licencia_ok(lic)):
+            continue
+        autor = limpiar(meta.get("Artist", {}).get("value", "")) or "autor desconocido"
+        fotos.append({"url": ii["url"] if videos else (ii.get("thumburl") or ii["url"]), "titulo": pg["title"],
+                      "credito": f"Wikimedia Commons ({autor[:40]}, {lic})"})
+    return fotos
+
+
+def foto_principal_wikipedia(nombre):
+    """La foto principal del articulo de Wikipedia (suele ser la mejor foto del protagonista)."""
+    for idioma in ("es", "en"):
+        try:
+            r = requests.get(f"https://{idioma}.wikipedia.org/w/api.php", headers=WIKI_UA, timeout=20, params={
+                "action": "query", "format": "json", "titles": nombre, "prop": "pageimages",
+                "piprop": "name", "redirects": 1}).json()
+            for pg in (r.get("query", {}).get("pages") or {}).values():
+                if pg.get("pageimage"):
+                    fotos = _info_commons({"titles": "File:" + pg["pageimage"]})
+                    if fotos:
+                        return fotos[0]
+        except Exception as e:
+            print(f"Wikipedia ({idioma}) no respondio para '{nombre}': {e}")
+    return None
+
+
+def buscar_foto(nombre, carpeta, usados):
+    """Busca una foto real con licencia libre. Devuelve (ruta_compuesta, credito) o (None, None)."""
+    if not nombre:
+        return None, None
+    candidatos = []
+    principal = foto_principal_wikipedia(nombre)
+    if principal:
+        candidatos.append(principal)
+    try:
+        candidatos += _info_commons({"generator": "search", "gsrsearch": f"{nombre} filetype:bitmap",
+                                     "gsrnamespace": 6, "gsrlimit": 12})
+    except Exception as e:
+        print(f"Commons no respondio para '{nombre}': {e}")
+    for c in candidatos:
+        if c["titulo"] in usados:
+            continue
+        usados.add(c["titulo"])
+        try:
+            r = requests.get(c["url"], headers=WIKI_UA, timeout=60)
+            if r.status_code != 200 or len(r.content) < 20_000:
+                continue
+            original = os.path.join(carpeta, f"foto{len(usados)}.img")
+            with open(original, "wb") as f:
+                f.write(r.content)
+            ruta = os.path.join(carpeta, f"foto{len(usados)}.jpg")
+            componer_foto(original, ruta)
+            return ruta, c["credito"]
+        except Exception as e:
+            print(f"No se pudo usar la foto {c['titulo']}: {e}")
+    return None, None
+
+
+def buscar_video_real(nombre, carpeta, usados):
+    """Busca un video REAL del protagonista en Wikimedia Commons con licencia libre.
+    Devuelve (ruta, credito) o (None, None). Hay menos videos que fotos, asi que muchas veces no encuentra."""
+    if not nombre:
+        return None, None
+    try:
+        candidatos = _info_commons({"generator": "search", "gsrsearch": f"{nombre} filetype:video",
+                                    "gsrnamespace": 6, "gsrlimit": 8}, videos=True)
+    except Exception as e:
+        print(f"Commons (videos) no respondio para '{nombre}': {e}")
+        return None, None
+    for c in candidatos:
+        if c["titulo"] in usados:
+            continue
+        usados.add(c["titulo"])
+        try:
+            r = requests.get(c["url"], headers=WIKI_UA, timeout=120)
+            if r.status_code != 200 or len(r.content) < 100_000:
+                continue
+            ruta = os.path.join(carpeta, f"real{len(usados)}.vid")
+            with open(ruta, "wb") as f:
+                f.write(r.content)
+            if video_valido(ruta) and duracion(ruta) >= 4:
+                return ruta, c["credito"]
+        except Exception as e:
+            print(f"No se pudo usar el video {c['titulo']}: {e}")
+    return None, None
+
+
+def componer_foto(origen, destino):
+    """Arma un fondo vertical: la misma foto desenfocada de fondo y la foto completa arriba,
+    para que no se recorten las caras y el texto de abajo se lea bien."""
+    foto = Image.open(origen).convert("RGB")
+    fondo = foto.copy()
+    escala = max(ANCHO / fondo.width, ALTO / fondo.height)
+    fondo = fondo.resize((int(fondo.width * escala) + 1, int(fondo.height * escala) + 1))
+    x, y = (fondo.width - ANCHO) // 2, (fondo.height - ALTO) // 2
+    fondo = fondo.crop((x, y, x + ANCHO, y + ALTO)).filter(ImageFilter.GaussianBlur(40))
+    fondo = ImageEnhance.Brightness(fondo).enhance(0.45)
+    caja_w, caja_h, caja_y = ANCHO - 2 * 40, 640, ARRIBA + 90
+    escala = min(caja_w / foto.width, caja_h / foto.height)
+    chica = foto.resize((int(foto.width * escala), int(foto.height * escala)), Image.LANCZOS)
+    fondo.paste(chica, ((ANCHO - chica.width) // 2, caja_y + (caja_h - chica.height) // 2))
+    fondo.save(destino, "JPEG", quality=92)
+
+
 # Palabras que delatan un video que puede confundir (banderas, fechas, politica, textos)
 PROHIBIDAS_VIDEO = {"flag", "flags", "usa", "america", "american", "united states", "election", "elections",
                     "vote", "voting", "politics", "president", "trump", "biden", "text", "typography",
@@ -657,13 +797,19 @@ def generar_voces(textos, carpeta):
 
 
 def elegir_musica(tono):
-    """Busca en musica/<tono>/ y, si no hay, en musica/. Devuelve la lista de temas posibles."""
-    def temas_en(carpeta):
-        if not os.path.isdir(carpeta):
-            return []
-        return [os.path.join(carpeta, m) for m in os.listdir(carpeta)
-                if m.lower().endswith((".mp3", ".wav", ".m4a"))]
-    return temas_en(os.path.join(CARPETA_MUSICA, tono or "")) or temas_en(CARPETA_MUSICA)
+    """Busca canciones en la carpeta de musica (sin importar mayusculas ni subcarpetas).
+    Primero en la subcarpeta del tono (alegre/seria); si no hay, en cualquier lado."""
+    extensiones = (".mp3", ".wav", ".m4a", ".ogg")
+    raiz = next((d for d in os.listdir(".") if os.path.isdir(d) and d.lower() == CARPETA_MUSICA.lower()), None)
+    todas = []
+    if raiz:
+        for carpeta, _, archivos in os.walk(raiz):
+            todas += [os.path.join(carpeta, a) for a in archivos if a.lower().endswith(extensiones)]
+    if not todas:                                   # por si las canciones quedaron sueltas en el repositorio
+        todas = [a for a in os.listdir(".") if os.path.isfile(a) and a.lower().endswith(extensiones)]
+    print(f"Canciones encontradas: {len(todas)}")
+    del_tono = [t for t in todas if tono and os.sep + tono.lower() + os.sep in t.lower() + os.sep]
+    return del_tono or todas
 
 
 def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
@@ -680,7 +826,21 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     clips = []
     for i, (seg, dur) in enumerate(zip(segmentos, duraciones)):
         clip = os.path.join(tmp, f"clip{i}.mp4")
-        if seg.get("fondo"):
+        if seg.get("video_real"):
+            caja_w, caja_h, caja_y = ANCHO - 80, 640, ARRIBA + 90
+            entrada = ["-stream_loop", "-1", "-i", seg["video_real"]]
+            base = (f"[0:v]fps={fps},split[a][b];"
+                    f"[a]scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,crop={ANCHO}:{ALTO},"
+                    f"boxblur=30:2,eq=brightness=-0.35[bg];"
+                    f"[b]scale={caja_w}:{caja_h}:force_original_aspect_ratio=decrease[fg];"
+                    f"[bg][fg]overlay=(W-w)/2:{caja_y}+({caja_h}-h)/2,setsar=1[f]")
+        elif seg.get("foto"):
+            cuadros = int(dur * fps) + 1
+            entrada = ["-i", seg["foto"]]
+            base = (f"[0:v]scale={int(ANCHO * 1.5)}:{int(ALTO * 1.5)},"
+                    f"zoompan=z='min(zoom+0.0004,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+                    f"d={cuadros}:s={ANCHO}x{ALTO}:fps={fps},setsar=1[f]")
+        elif seg.get("fondo"):
             entrada = ["-stream_loop", "-1", "-i", seg["fondo"]]
             base = (f"[0:v]scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,crop={ANCHO}:{ALTO},"
                     f"fps={fps},setsar=1,eq=brightness=-0.10:saturation=0.95[f]")
@@ -696,7 +856,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         try:
             correr(["ffmpeg", "-y", *entrada, "-i", seg["capa"], "-filter_complex", f"{base};{fin}", *salida_clip])
         except RuntimeError as e:
-            if not seg.get("fondo"):
+            if not (seg.get("fondo") or seg.get("foto") or seg.get("video_real")):
                 raise
             print(f"Fallo el video de fondo de la parte {i + 1}, uso fondo liso. ({e})")
             liso = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
@@ -734,7 +894,8 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         correr(["ffmpeg", "-y", "-i", voz, "-stream_loop", "-1", "-i", random.choice(temas),
                 "-filter_complex",
                 f"[1:a]volume={VOLUMEN_MUSICA},afade=t=in:d=1,afade=t=out:st={max(total - 2, 0):.2f}:d=2[m];"
-                f"[0:a][m]amix=inputs=2:duration=first:normalize=0[a]",
+                f"[0:a]asplit[v1][v2];[m][v2]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[md];"
+                f"[v1][md]amix=inputs=2:duration=first:normalize=0[a]",
                 "-map", "[a]", "-t", f"{total:.3f}", "-ar", "48000", audio])
 
     correr(["ffmpeg", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
@@ -1115,20 +1276,36 @@ def main():
     medios = [f for f in fuentes if not f.startswith("YouTube:")][:3]
     creadores = [f.replace("YouTube: ", "") + " (YouTube)" for f in fuentes if f.startswith("YouTube:")][:2]
 
-    usados, autores = set(), []
-    def fondo(busqueda):
-        ruta, autor = buscar_video(busqueda, carpeta, usados)
+    usados, fotos_usadas, reales_usados, autores = set(), set(), set(), []
+    principal = (guion.get("imagen_gancho") or "").strip()
+
+    def fondo(imagen, busqueda_video):
+        """Orden de preferencia: video real del protagonista, foto real, video de stock."""
+        imagen = (imagen or "").strip() or principal
+        ruta, credito = buscar_video_real(imagen, carpeta, reales_usados)
+        if ruta:
+            if credito not in autores:
+                autores.append(credito)
+            return {"video_real": ruta}
+        ruta, credito = buscar_foto(imagen, carpeta, fotos_usadas)
+        if ruta:
+            if credito not in autores:
+                autores.append(credito)
+            return {"foto": ruta}
+        ruta, autor = buscar_video(busqueda_video, carpeta, usados)
         if autor and autor not in autores:
             autores.append(autor)
-        return ruta
+        return {"fondo": ruta}
 
-    segmentos = [{"fondo": fondo(guion.get("video_gancho")), "capa": os.path.join(carpeta, "c0.png")}]
+    segmentos = [{**fondo(guion.get("imagen_gancho"), guion.get("video_gancho")),
+                  "capa": os.path.join(carpeta, "c0.png")}]
     capa_gancho(guion, segmentos[0]["capa"])
     for i, p in enumerate(guion["placas"][:3]):
-        seg = {"fondo": fondo(p.get("video")), "capa": os.path.join(carpeta, f"c{i + 1}.png")}
+        seg = {**fondo(p.get("imagen"), p.get("video")), "capa": os.path.join(carpeta, f"c{i + 1}.png")}
         capa_desarrollo(p, i, 3, guion["categoria"], seg["capa"])
         segmentos.append(seg)
-    cierre = {"fondo": segmentos[0]["fondo"], "capa": os.path.join(carpeta, "cierre.png")}
+    cierre = {"fondo": segmentos[0].get("fondo"), "foto": segmentos[0].get("foto"),
+              "video_real": segmentos[0].get("video_real"), "capa": os.path.join(carpeta, "cierre.png")}
     capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""))
     segmentos.append(cierre)
 
@@ -1139,9 +1316,10 @@ def main():
     portada = os.path.join(carpeta, f"portada-{id_corrida}.jpg")
     total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada,
                                             (guion.get("tono") or "").strip().lower())
-    bancos = sorted({a.split(' (')[0] for a in autores})
+    bancos = autores                                      # créditos completos (autor y licencia)
     caption = texto_publicacion(guion, medios, creadores, bancos)
-    sin_fondo = sum(1 for sg in segmentos[:-1] if not sg["fondo"])
+    sin_fondo = sum(1 for sg in segmentos[:-1] if not (sg.get("fondo") or sg.get("foto") or sg.get("video_real")))
+    reales = sum(1 for sg in segmentos[:-1] if sg.get("foto") or sg.get("video_real"))
 
     nota = []
     if not con_voz:
@@ -1150,6 +1328,7 @@ def main():
         nota.append("sin musica (no hay archivos en la carpeta 'musica')")
     if sin_fondo:
         nota.append(f"{sin_fondo} partes sin video de fondo (no se encontro video o falta la clave de Pixabay)")
+    nota.append(f"{reales} de {len(segmentos) - 1} partes con imágenes reales del protagonista")
     mandar_borrador(reel, caption, id_corrida, modo_prueba,
                     f"ℹ️ Reel de {total:.0f} segundos" + (" — " + "; ".join(nota) if nota else ""))
     if modo_prueba:
