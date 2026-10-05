@@ -351,6 +351,23 @@ TITULARES (* = nota completa disponible, ▶ = video en tendencia de YouTube):
 {lista}""")["temas"]
 
 
+def completar_guion(g):
+    """Si a la IA se le olvida algun campo, lo completa con lo que haya en vez de cortar todo."""
+    placas = [p for p in g.get("placas", []) if isinstance(p, dict) and (p.get("pantalla") or p.get("voz"))][:3]
+    for p in placas:
+        p.setdefault("titulo", "")
+        p["pantalla"] = p.get("pantalla") or p.get("voz", "")
+        p["voz"] = p.get("voz") or p["pantalla"]
+    if not g.get("gancho") or len(placas) < 2:
+        raise RuntimeError("La IA no armo un guion completo (falta gancho o desarrollo).")
+    g["placas"] = placas
+    g.setdefault("categoria", "NOTICIA")
+    g["descripcion"] = g.get("descripcion") or "\n\n".join(p["pantalla"] for p in placas)
+    g.setdefault("hashtags", [])
+    g.setdefault("pregunta", "")
+    return g
+
+
 def escribir_guion(tema, notas):
     material = "\n\n".join(f"--- {fuente} ---\n{texto}" for fuente, texto in notas)
     return preguntar_ia(f"""Eres guionista de "QueloQue Viral", cuenta de Instagram de noticias para todo el publico hispanohablante.
@@ -371,6 +388,7 @@ ESTRUCTURA:
   "pantalla" (texto para leer, maximo 120 caracteres) y "voz" (lo que dice la voz en off,
   1 o 2 oraciones cortas, MAXIMO 20 palabras).
 - El Reel completo debe durar unos 30 segundos: se breve y directo.
+- tono: "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es importante, triste o delicada.
 - pregunta: una pregunta corta para invitar a comentar (maximo 60 caracteres), ej: "¿Tu que harias?", "¿Lo sabias?".
 - Para el gancho y cada placa, "video": 1 a 3 palabras EN INGLES para buscar un video de stock que
   ilustre esa parte (ej: "dog walking road", "football stadium crowd", "smartphone hands").
@@ -391,7 +409,7 @@ Responde SOLO con JSON valido:
 "gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...", "imagen_gancho": "...",
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "...", "imagen": "..."}}, (3 placas en total)],
 "pregunta": "...",
-"tono": "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es una noticia importante, triste o delicada,
+"tono": "alegre o seria",
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
 "hashtags": ["#hasta", "#seis", "#hashtags"]}}
 
@@ -1265,7 +1283,7 @@ def main():
                 notas.append((n["fuente"], f"{n['titulo']}. {n.get('texto_largo', '')}"))
                 fuentes.append(n["fuente"])
         if sum(len(t) for _, t in notas) >= 800:
-            guion = escribir_guion(tema["tema"], notas)
+            guion = completar_guion(escribir_guion(tema["tema"], notas))
             break
         print(f"Poca informacion sobre '{tema['tema']}', pruebo el siguiente.")
     if not guion:
@@ -1302,7 +1320,7 @@ def main():
     capa_gancho(guion, segmentos[0]["capa"])
     for i, p in enumerate(guion["placas"][:3]):
         seg = {**fondo(p.get("imagen"), p.get("video")), "capa": os.path.join(carpeta, f"c{i + 1}.png")}
-        capa_desarrollo(p, i, 3, guion["categoria"], seg["capa"])
+        capa_desarrollo(p, i, len(guion["placas"]), guion["categoria"], seg["capa"])
         segmentos.append(seg)
     cierre = {"fondo": segmentos[0].get("fondo"), "foto": segmentos[0].get("foto"),
               "video_real": segmentos[0].get("video_real"), "capa": os.path.join(carpeta, "cierre.png")}
