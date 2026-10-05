@@ -670,9 +670,49 @@ def verificar_imagen(ruta_imagen, nombre, contexto):
 MAX_VERIFICACIONES = 4      # imagenes que se le muestran a la IA por cada parte del Reel
 
 
+def _candidatos_openverse(nombre, claves):
+    """Openverse: buscador de imagenes con licencia libre (Flickr y otros archivos), incluidas las cuentas
+    oficiales de gobiernos y parlamentos que publican sus fotos para libre uso. Sin clave."""
+    try:
+        r = requests.get("https://api.openverse.org/v1/images/", headers=WIKI_UA, timeout=20, params={
+            "q": nombre, "license_type": "commercial,modification", "page_size": 20,
+            "mature": "false"}).json()
+    except Exception as e:
+        print(f"Openverse no respondio para '{nombre}': {e}")
+        return []
+    fotos = []
+    for it in r.get("results", []):
+        texto = " ".join([it.get("title") or ""] + [t.get("name", "") for t in it.get("tags") or []])
+        if not _titulo_relacionado(texto, claves) or (it.get("width") or 0) < 700:
+            continue
+        lic = f"CC {it.get('license', '').upper()} {it.get('license_version', '')}".strip()
+        if it.get("license") in ("cc0", "pdm"):
+            lic = "dominio público"
+        fotos.append({"url": it.get("url"), "titulo": f"ov:{it.get('id')}",
+                      "credito": f"{it.get('source', 'Openverse').title()} ({(it.get('creator') or 'autor')[:40]}, {lic})"})
+    return fotos
+
+
+def _candidatos_pixabay_fotos(nombre):
+    """Fotos de Pixabay: sirven sobre todo para lugares, objetos y deportes."""
+    if not PIXABAY_API_KEY:
+        return []
+    try:
+        r = requests.get("https://pixabay.com/api/", timeout=20, params={
+            "key": PIXABAY_API_KEY, "q": nombre[:100], "image_type": "photo", "safesearch": "true",
+            "per_page": 15}).json()
+    except Exception as e:
+        print(f"Pixabay (fotos) no respondio para '{nombre}': {e}")
+        return []
+    return [{"url": h.get("largeImageURL"), "titulo": f"pbf:{h.get('id')}",
+             "credito": f"Pixabay ({h.get('user', '')})"}
+            for h in r.get("hits", []) if h.get("largeImageURL") and video_apto(h.get("tags"), nombre)]
+
+
 def buscar_foto(nombre, carpeta, usados, contexto=""):
-    """Busca una foto real con licencia libre QUE CORRESPONDA a la noticia.
-    Devuelve (ruta_compuesta, credito) o (None, None)."""
+    """Busca una foto real con licencia libre QUE CORRESPONDA a la noticia, en varias fuentes:
+    Wikipedia, Wikimedia Commons (incluidas subcategorias), Openverse (Flickr y archivos oficiales)
+    y Pixabay. Cada una la revisa la IA antes de usarla. Devuelve (ruta, credito) o (None, None)."""
     if not nombre:
         return None, None
     claves = _palabras_clave(nombre)
@@ -680,16 +720,27 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
     principal = foto_principal_wikipedia(nombre)
     if principal:
         candidatos.append(principal)
-    for busqueda in (f'incategory:"{nombre}"', f"{nombre} filetype:bitmap"):
+    for busqueda in (f'incategory:"{nombre}"', f'deepcat:"{nombre}"', f"{nombre} filetype:bitmap"):
         try:
             encontrados = _info_commons({"generator": "search", "gsrsearch": busqueda,
-                                         "gsrnamespace": 6, "gsrlimit": 15})
-            # Solo archivos cuyo nombre menciona al protagonista
+                                         "gsrnamespace": 6, "gsrlimit": 20})
             candidatos += [c for c in encontrados if _titulo_relacionado(c["titulo"], claves)]
         except Exception as e:
             print(f"Commons no respondio para '{busqueda}': {e}")
-    verificadas = 0
+    candidatos += _candidatos_openverse(nombre, claves)
+    candidatos += _candidatos_pixabay_fotos(nombre)
+    # sin repetidos, mezclando un poco para que no salgan siempre las mismas
+    vistos, unicos = set(), []
     for c in candidatos:
+        if c["url"] and c["titulo"] not in vistos:
+            vistos.add(c["titulo"])
+            unicos.append(c)
+    if len(unicos) > 2:
+        resto = unicos[1:]
+        random.shuffle(resto)
+        unicos = unicos[:1] + resto
+    verificadas = 0
+    for c in unicos:
         if c["titulo"] in usados or verificadas >= MAX_VERIFICACIONES:
             continue
         usados.add(c["titulo"])
@@ -945,6 +996,26 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
                     f"boxblur=30:2,eq=brightness=-0.35[bg];"
                     f"[b]scale={caja_w}:{caja_h}:force_original_aspect_ratio=decrease[fg];"
                     f"[bg][fg]overlay=(W-w)/2:{caja_y}+({caja_h}-h)/2,setsar=1[f]")
+        elif seg.get("fotos"):
+            # Varias fotos en la misma parte: cada una con su zoom, una detras de otra
+            sub = []
+            parte = dur / len(seg["fotos"])
+            for k, f_ in enumerate(seg["fotos"]):
+                sc = os.path.join(tmp, f"sub{i}_{k}.mp4")
+                cuad = int(parte * fps) + 1
+                correr(["ffmpeg", "-y", "-i", f_, "-vf",
+                        f"scale={int(ANCHO * 1.5)}:{int(ALTO * 1.5)},"
+                        f"zoompan=z='{'min(zoom+0.0005,1.07)' if k % 2 == 0 else 'if(eq(on,0),1.07,max(zoom-0.0005,1))'}':"
+                        f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={cuad}:s={ANCHO}x{ALTO}:fps={fps},setsar=1",
+                        "-frames:v", str(cuad), "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", sc])
+                sub.append(sc)
+            lista_sub = os.path.join(tmp, f"sub{i}.txt")
+            with open(lista_sub, "w") as fl:
+                fl.writelines(f"file '{x}'\n" for x in sub)
+            pase = os.path.join(tmp, f"pase{i}.mp4")
+            correr(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lista_sub, "-c", "copy", pase])
+            entrada = ["-stream_loop", "-1", "-i", pase]
+            base = "[0:v]setsar=1[f]"
         elif seg.get("foto"):
             cuadros = int(dur * fps) + 1
             entrada = ["-i", seg["foto"]]
@@ -967,7 +1038,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         try:
             correr(["ffmpeg", "-y", *entrada, "-i", seg["capa"], "-filter_complex", f"{base};{fin}", *salida_clip])
         except RuntimeError as e:
-            if not (seg.get("fondo") or seg.get("foto") or seg.get("video_real")):
+            if not (seg.get("fondo") or seg.get("foto") or seg.get("fotos") or seg.get("video_real")):
                 raise
             print(f"Fallo el video de fondo de la parte {i + 1}, uso fondo liso. ({e})")
             liso = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
@@ -1401,15 +1472,27 @@ def main():
         orden = claves[indice % len(claves):] + claves[:indice % len(claves)] if claves else []
         for clave in orden:
             ruta, credito = buscar_video_real(clave, carpeta, reales_usados, contexto)
-            tipo = "video_real"
-            if not ruta:
-                ruta, credito = buscar_foto(clave, carpeta, fotos_usadas, contexto)
-                tipo = "foto"
             if ruta:
                 if credito not in autores:
                     autores.append(credito)
-                aprobados.append({tipo: ruta})
-                return {tipo: ruta}
+                aprobados.append({"video_real": ruta})
+                return {"video_real": ruta}
+            ruta, credito = buscar_foto(clave, carpeta, fotos_usadas, contexto)
+            if ruta:
+                if credito not in autores:
+                    autores.append(credito)
+                # una segunda foto (del mismo tema o de la siguiente palabra clave) para darle mas contexto
+                fotos = [ruta]
+                for clave2 in [clave] + [c for c in orden if c != clave]:
+                    ruta2, credito2 = buscar_foto(clave2, carpeta, fotos_usadas, contexto)
+                    if ruta2:
+                        fotos.append(ruta2)
+                        if credito2 not in autores:
+                            autores.append(credito2)
+                        break
+                media = {"fotos": fotos} if len(fotos) > 1 else {"foto": ruta}
+                aprobados.append(media)
+                return media
         orden_en = claves_en[indice % len(claves_en):] + claves_en[:indice % len(claves_en)] if claves_en else []
         for busqueda in orden_en:
             ruta, autor = buscar_video(busqueda, carpeta, usados, contexto)
@@ -1430,9 +1513,10 @@ def main():
         segmentos.append(seg)
     # Si alguna parte quedo sin fondo pero otras si tienen, reusa uno verificado
     for i, sg in enumerate(segmentos):
-        if not (sg.get("fondo") or sg.get("foto") or sg.get("video_real")) and aprobados:
+        if not (sg.get("fondo") or sg.get("foto") or sg.get("fotos") or sg.get("video_real")) and aprobados:
             sg.update(aprobados[i % len(aprobados)])
     cierre = {"fondo": segmentos[0].get("fondo"), "foto": segmentos[0].get("foto"),
+              "fotos": segmentos[0].get("fotos"),
               "video_real": segmentos[0].get("video_real"), "capa": os.path.join(carpeta, "cierre.png")}
     capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""))
     segmentos.append(cierre)
@@ -1446,8 +1530,9 @@ def main():
                                             (guion.get("tono") or "").strip().lower())
     bancos = autores                                      # créditos completos (autor y licencia)
     caption = texto_publicacion(guion, medios, creadores, bancos)
-    sin_fondo = sum(1 for sg in segmentos[:-1] if not (sg.get("fondo") or sg.get("foto") or sg.get("video_real")))
-    reales = sum(1 for sg in segmentos[:-1] if sg.get("foto") or sg.get("video_real"))
+    sin_fondo = sum(1 for sg in segmentos[:-1]
+                    if not (sg.get("fondo") or sg.get("foto") or sg.get("fotos") or sg.get("video_real")))
+    reales = sum(1 for sg in segmentos[:-1] if sg.get("foto") or sg.get("fotos") or sg.get("video_real"))
 
     nota = []
     if not con_voz:
