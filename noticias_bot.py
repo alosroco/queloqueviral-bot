@@ -44,7 +44,8 @@ NOMBRE_CUENTA = "@queloqueviral"            # Cambialo por tu usuario de Instagr
 HORAS_ATRAS = 8                           # Solo noticias de las ultimas X horas
 ESPERA_APROBACION_MIN = 25                # Si no respondes en este tiempo, se descarta
 MODELO_IA = "claude-sonnet-5-5"
-VOZ = "es-US-AlonsoNeural"               # Voz neutra. Femenina: "es-US-PalomaNeural"
+VOCES = ["es-US-AlonsoNeural", "es-US-PalomaNeural"]   # se alternan: un Reel con voz de hombre, otro de mujer
+VOZ = VOCES[0]
 VELOCIDAD_VOZ = "+15%"
 VOLUMEN_MUSICA = 0.25                     # volumen de la musica (baja sola cuando habla la voz)
 CARPETA_MUSICA = "musica"                 # Pone ahi archivos .mp3 libres de derechos
@@ -404,6 +405,12 @@ ESTRUCTURA:
   edificios, objetos o eventos conocidos. Completa "imagen" en TODAS las partes que puedas: si una parte no
   tiene un protagonista propio, repite el protagonista principal de la noticia o usa el lugar donde ocurre.
   Deja "" solo si no hay ninguno. Nunca personas privadas ni victimas.
+- PALABRAS CLAVE PARA IMAGENES (lo mas importante para que las imagenes correspondan a la noticia):
+  "palabras_clave": las 3 cosas concretas MAS centrales de la noticia, en orden de importancia, escritas
+  como el titulo de su articulo de Wikipedia (ej: ["Jair Bolsonaro", "Supremo Tribunal Federal", "Brasilia"]
+  o ["Daniil Medvedev", "Abierto de Australia", "Tenis"]). La primera debe ser el protagonista principal.
+  "palabras_clave_en": las mismas 3 en ingles y genericas para buscar video de stock
+  (ej: ["brazil politics", "courthouse", "brasilia city"] o ["tennis player", "tennis court", "tennis match"]).
 - Si alguna informacion viene de un video de YouTube, nombra al canal como fuente en "pantalla" o "voz".
 
 Responde SOLO con JSON valido:
@@ -411,6 +418,7 @@ Responde SOLO con JSON valido:
 "gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...", "imagen_gancho": "...",
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "...", "imagen": "..."}}, (3 placas en total)],
 "pregunta": "...",
+"palabras_clave": ["...", "...", "..."], "palabras_clave_en": ["...", "...", "..."],
 "tono": "alegre o seria",
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
 "hashtags": ["#hasta", "#seis", "#hashtags"]}}
@@ -803,7 +811,17 @@ def _bajar_video(url, carpeta, usados, clave):
         return None
 
 
-def buscar_video(busqueda, carpeta, usados):
+def _verificar_video(ruta, nombre, contexto):
+    """Revisa un cuadro del video con la IA."""
+    if not contexto:
+        return True
+    cuadro = ruta + ".jpg"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "1", "-i", ruta, "-frames:v", "1", cuadro],
+                   check=False)
+    return os.path.exists(cuadro) and verificar_imagen(cuadro, nombre, contexto)
+
+
+def buscar_video(busqueda, carpeta, usados, contexto=""):
     """Busca un video libre de derechos (Pixabay o Pexels).
     Devuelve (archivo, credito) o (None, None)."""
     if not busqueda:
@@ -824,7 +842,12 @@ def buscar_video(busqueda, carpeta, usados):
                 for o in sorted(opciones, key=lambda o: -o["height"])[:2]:   # si falla la grande, prueba otra
                     ruta = _bajar_video(o["url"], carpeta, usados, clave)
                     if ruta:
-                        return ruta, f"Pixabay ({v.get('user', '')})"
+                        if _verificar_video(ruta, busqueda, contexto):
+                            return ruta, f"Pixabay ({v.get('user', '')})"
+                        print(f"Video de stock descartado por no corresponder: {busqueda}")
+                        break
+                if sum(1 for u in usados if u.startswith("pb")) >= 6:      # no revisar infinitos
+                    break
         except Exception as e:
             print(f"Pixabay no respondio para '{busqueda}': {e}")
     if PEXELS_API_KEY:
@@ -843,7 +866,7 @@ def buscar_video(busqueda, carpeta, usados):
                     continue
                 elegido = min(archivos, key=lambda f: abs(f["height"] - 1920))
                 ruta = _bajar_video(elegido["link"], carpeta, usados, clave)
-                if ruta:
+                if ruta and _verificar_video(ruta, busqueda, contexto):
                     return ruta, f"Pexels ({v.get('user', {}).get('name', '')})"
         except Exception as e:
             print(f"Pexels no respondio para '{busqueda}': {e}")
@@ -863,6 +886,9 @@ def duracion(ruta):
     return float(r.stdout.strip())
 
 
+VOZ_ELEGIDA = random.choice(VOCES)
+
+
 def generar_voces(textos, carpeta):
     """Devuelve la lista de archivos de voz, o None si el servicio de voz no responde."""
     try:
@@ -872,7 +898,7 @@ def generar_voces(textos, carpeta):
             rutas = []
             for i, t in enumerate(textos):
                 ruta = os.path.join(carpeta, f"voz{i}.mp3")
-                await edge_tts.Communicate(t, VOZ, rate=VELOCIDAD_VOZ).save(ruta)
+                await edge_tts.Communicate(t, VOZ_ELEGIDA, rate=VELOCIDAD_VOZ).save(ruta)
                 rutas.append(ruta)
             return rutas
         return asyncio.run(todas())
@@ -1362,34 +1388,50 @@ def main():
     creadores = [f.replace("YouTube: ", "") + " (YouTube)" for f in fuentes if f.startswith("YouTube:")][:2]
 
     usados, fotos_usadas, reales_usados, autores = set(), set(), set(), []
-    principal = (guion.get("imagen_gancho") or "").strip()
     contexto = f"{guion['gancho']}. " + " ".join(p.get("pantalla", "") for p in guion["placas"])
+    # Las 3 palabras clave mandan: todas las imagenes se buscan a partir de ellas
+    claves = [c for c in (guion.get("palabras_clave") or []) if isinstance(c, str) and c.strip()][:3]
+    claves = claves or [x for x in [guion.get("imagen_gancho")] + [p.get("imagen") for p in guion["placas"]] if x][:3]
+    claves_en = [c for c in (guion.get("palabras_clave_en") or []) if isinstance(c, str) and c.strip()][:3]
+    aprobados = []                                   # fondos ya verificados, para reusar si falta alguno
 
-    def fondo(imagen, busqueda_video):
-        """Orden de preferencia: video real del protagonista, foto real, video de stock."""
-        imagen = (imagen or "").strip() or principal
-        ruta, credito = buscar_video_real(imagen, carpeta, reales_usados, contexto)
-        if ruta:
-            if credito not in autores:
-                autores.append(credito)
-            return {"video_real": ruta}
-        ruta, credito = buscar_foto(imagen, carpeta, fotos_usadas, contexto)
-        if ruta:
-            if credito not in autores:
-                autores.append(credito)
-            return {"foto": ruta}
-        ruta, autor = buscar_video(busqueda_video, carpeta, usados)
-        if autor and autor not in autores:
-            autores.append(autor)
-        return {"fondo": ruta}
+    def fondo(indice):
+        """Para cada parte prueba las palabras clave empezando por una distinta (rota el orden),
+        primero video real, despues foto real y por ultimo video de stock. Todo verificado por la IA."""
+        orden = claves[indice % len(claves):] + claves[:indice % len(claves)] if claves else []
+        for clave in orden:
+            ruta, credito = buscar_video_real(clave, carpeta, reales_usados, contexto)
+            tipo = "video_real"
+            if not ruta:
+                ruta, credito = buscar_foto(clave, carpeta, fotos_usadas, contexto)
+                tipo = "foto"
+            if ruta:
+                if credito not in autores:
+                    autores.append(credito)
+                aprobados.append({tipo: ruta})
+                return {tipo: ruta}
+        orden_en = claves_en[indice % len(claves_en):] + claves_en[:indice % len(claves_en)] if claves_en else []
+        for busqueda in orden_en:
+            ruta, autor = buscar_video(busqueda, carpeta, usados, contexto)
+            if ruta:
+                if autor and autor not in autores:
+                    autores.append(autor)
+                aprobados.append({"fondo": ruta})
+                return {"fondo": ruta}
+        if aprobados:                                # mejor repetir una imagen correcta que poner una equivocada
+            return dict(aprobados[indice % len(aprobados)])
+        return {"fondo": None}
 
-    segmentos = [{**fondo(guion.get("imagen_gancho"), guion.get("video_gancho")),
-                  "capa": os.path.join(carpeta, "c0.png")}]
+    segmentos = [{**fondo(0), "capa": os.path.join(carpeta, "c0.png")}]
     capa_gancho(guion, segmentos[0]["capa"])
     for i, p in enumerate(guion["placas"][:3]):
-        seg = {**fondo(p.get("imagen"), p.get("video")), "capa": os.path.join(carpeta, f"c{i + 1}.png")}
+        seg = {**fondo(i + 1), "capa": os.path.join(carpeta, f"c{i + 1}.png")}
         capa_desarrollo(p, i, len(guion["placas"]), guion["categoria"], seg["capa"])
         segmentos.append(seg)
+    # Si alguna parte quedo sin fondo pero otras si tienen, reusa uno verificado
+    for i, sg in enumerate(segmentos):
+        if not (sg.get("fondo") or sg.get("foto") or sg.get("video_real")) and aprobados:
+            sg.update(aprobados[i % len(aprobados)])
     cierre = {"fondo": segmentos[0].get("fondo"), "foto": segmentos[0].get("foto"),
               "video_real": segmentos[0].get("video_real"), "capa": os.path.join(carpeta, "cierre.png")}
     capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""))
