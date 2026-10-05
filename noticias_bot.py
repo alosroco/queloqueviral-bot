@@ -32,6 +32,8 @@ from email.utils import parsedate_to_datetime
 
 import base64
 import hashlib
+import io
+import unicodedata
 
 import requests
 from cryptography.fernet import Fernet, InvalidToken
@@ -612,21 +614,75 @@ def foto_principal_wikipedia(nombre):
     return None
 
 
-def buscar_foto(nombre, carpeta, usados):
-    """Busca una foto real con licencia libre. Devuelve (ruta_compuesta, credito) o (None, None)."""
+def _sin_acentos(t):
+    return "".join(c for c in unicodedata.normalize("NFD", t.lower()) if unicodedata.category(c) != "Mn")
+
+
+def _palabras_clave(nombre):
+    """Palabras distintivas del protagonista (ej: 'Jair Bolsonaro' -> ['jair', 'bolsonaro'])."""
+    comunes = {"the", "los", "las", "del", "de", "la", "el", "and", "y", "of", "fc", "cf", "club"}
+    return [p for p in re.findall(r"[a-z0-9]+", _sin_acentos(nombre)) if len(p) >= 4 and p not in comunes]
+
+
+def _titulo_relacionado(titulo, claves):
+    """El nombre del archivo tiene que mencionar al protagonista (al menos su palabra mas distintiva)."""
+    if not claves:
+        return False
+    t = _sin_acentos(titulo)
+    distintiva = max(claves, key=len)
+    return distintiva in t
+
+
+def verificar_imagen(ruta_imagen, nombre, contexto):
+    """Le muestra la imagen a la IA y pregunta si corresponde a la noticia. Devuelve True o False."""
+    try:
+        img = Image.open(ruta_imagen).convert("RGB")
+        img.thumbnail((512, 512))
+        buf = io.BytesIO()
+        img.save(buf, "JPEG", quality=80)
+        datos = base64.b64encode(buf.getvalue()).decode()
+        r = requests.post("https://api.anthropic.com/v1/messages", timeout=60, headers={
+            "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01",
+            "content-type": "application/json"},
+            json={"model": MODELO_IA, "max_tokens": 5, "messages": [{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": datos}},
+                {"type": "text", "text": (
+                    f"Noticia: {contexto}\nProtagonista buscado: {nombre}\n"
+                    "¿Esta imagen muestra al protagonista buscado, o un lugar u objeto directamente relacionado "
+                    "con esta noticia? Responde NO si muestra a otra persona, un tema distinto (por ejemplo otro "
+                    "deporte o evento), un grafico, mapa, texto o logo. Responde solo SI o NO.")}]}]})
+        r.raise_for_status()
+        respuesta = "".join(b.get("text", "") for b in r.json()["content"]).strip().upper()
+        return respuesta.startswith("SI") or respuesta.startswith("SÍ")
+    except Exception as e:
+        print(f"No se pudo verificar la imagen ({e}); por seguridad no la uso.")
+        return False
+
+
+MAX_VERIFICACIONES = 4      # imagenes que se le muestran a la IA por cada parte del Reel
+
+
+def buscar_foto(nombre, carpeta, usados, contexto=""):
+    """Busca una foto real con licencia libre QUE CORRESPONDA a la noticia.
+    Devuelve (ruta_compuesta, credito) o (None, None)."""
     if not nombre:
         return None, None
+    claves = _palabras_clave(nombre)
     candidatos = []
     principal = foto_principal_wikipedia(nombre)
     if principal:
         candidatos.append(principal)
-    try:
-        candidatos += _info_commons({"generator": "search", "gsrsearch": f"{nombre} filetype:bitmap",
-                                     "gsrnamespace": 6, "gsrlimit": 12})
-    except Exception as e:
-        print(f"Commons no respondio para '{nombre}': {e}")
+    for busqueda in (f'incategory:"{nombre}"', f"{nombre} filetype:bitmap"):
+        try:
+            encontrados = _info_commons({"generator": "search", "gsrsearch": busqueda,
+                                         "gsrnamespace": 6, "gsrlimit": 15})
+            # Solo archivos cuyo nombre menciona al protagonista
+            candidatos += [c for c in encontrados if _titulo_relacionado(c["titulo"], claves)]
+        except Exception as e:
+            print(f"Commons no respondio para '{busqueda}': {e}")
+    verificadas = 0
     for c in candidatos:
-        if c["titulo"] in usados:
+        if c["titulo"] in usados or verificadas >= MAX_VERIFICACIONES:
             continue
         usados.add(c["titulo"])
         try:
@@ -636,6 +692,10 @@ def buscar_foto(nombre, carpeta, usados):
             original = os.path.join(carpeta, f"foto{len(usados)}.img")
             with open(original, "wb") as f:
                 f.write(r.content)
+            verificadas += 1
+            if not verificar_imagen(original, nombre, contexto):
+                print(f"Descartada por no corresponder a la noticia: {c['titulo']}")
+                continue
             ruta = os.path.join(carpeta, f"foto{len(usados)}.jpg")
             componer_foto(original, ruta)
             return ruta, c["credito"]
@@ -644,7 +704,7 @@ def buscar_foto(nombre, carpeta, usados):
     return None, None
 
 
-def buscar_video_real(nombre, carpeta, usados):
+def buscar_video_real(nombre, carpeta, usados, contexto=""):
     """Busca un video REAL del protagonista en Wikimedia Commons con licencia libre.
     Devuelve (ruta, credito) o (None, None). Hay menos videos que fotos, asi que muchas veces no encuentra."""
     if not nombre:
@@ -655,6 +715,8 @@ def buscar_video_real(nombre, carpeta, usados):
     except Exception as e:
         print(f"Commons (videos) no respondio para '{nombre}': {e}")
         return None, None
+    claves = _palabras_clave(nombre)
+    candidatos = [c for c in candidatos if _titulo_relacionado(c["titulo"], claves)][:3]
     for c in candidatos:
         if c["titulo"] in usados:
             continue
@@ -667,7 +729,12 @@ def buscar_video_real(nombre, carpeta, usados):
             with open(ruta, "wb") as f:
                 f.write(r.content)
             if video_valido(ruta) and duracion(ruta) >= 4:
-                return ruta, c["credito"]
+                cuadro = ruta + ".jpg"
+                subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "1", "-i", ruta,
+                                "-frames:v", "1", cuadro], check=False)
+                if os.path.exists(cuadro) and verificar_imagen(cuadro, nombre, contexto):
+                    return ruta, c["credito"]
+                print(f"Video descartado por no corresponder a la noticia: {c['titulo']}")
         except Exception as e:
             print(f"No se pudo usar el video {c['titulo']}: {e}")
     return None, None
@@ -1296,16 +1363,17 @@ def main():
 
     usados, fotos_usadas, reales_usados, autores = set(), set(), set(), []
     principal = (guion.get("imagen_gancho") or "").strip()
+    contexto = f"{guion['gancho']}. " + " ".join(p.get("pantalla", "") for p in guion["placas"])
 
     def fondo(imagen, busqueda_video):
         """Orden de preferencia: video real del protagonista, foto real, video de stock."""
         imagen = (imagen or "").strip() or principal
-        ruta, credito = buscar_video_real(imagen, carpeta, reales_usados)
+        ruta, credito = buscar_video_real(imagen, carpeta, reales_usados, contexto)
         if ruta:
             if credito not in autores:
                 autores.append(credito)
             return {"video_real": ruta}
-        ruta, credito = buscar_foto(imagen, carpeta, fotos_usadas)
+        ruta, credito = buscar_foto(imagen, carpeta, fotos_usadas, contexto)
         if ruta:
             if credito not in autores:
                 autores.append(credito)
