@@ -250,7 +250,7 @@ def es_directo(n):
 
 
 # ======================== 3. INTELIGENCIA ARTIFICIAL ========================
-def preguntar_ia(texto, max_tokens=2000):
+def _llamar_ia(texto, max_tokens):
     r = requests.post("https://api.anthropic.com/v1/messages", timeout=120, headers={
         "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01",
         "content-type": "application/json"},
@@ -259,7 +259,23 @@ def preguntar_ia(texto, max_tokens=2000):
     r.raise_for_status()
     t = "".join(b.get("text", "") for b in r.json()["content"])
     t = t.replace("```json", "").replace("```", "").strip()
-    return json.loads(t[t.find("{"):t.rfind("}") + 1])
+    return t[t.find("{"):t.rfind("}") + 1]
+
+
+def preguntar_ia(texto, max_tokens=2000):
+    """Pide una respuesta en JSON. Si viene mal formada, le pide a la IA que la corrija."""
+    texto += ("\n\nIMPORTANTE: dentro de los textos NO uses comillas dobles (\"). "
+              "Si necesitas citar algo, usa comillas simples o «».")
+    crudo = _llamar_ia(texto, max_tokens)
+    for intento in range(2):
+        try:
+            return json.loads(crudo)
+        except json.JSONDecodeError as e:
+            print(f"JSON invalido de la IA ({e}). Pido correccion (intento {intento + 1}).")
+            crudo = _llamar_ia("Este JSON es invalido: " + str(e) + ". Corrigelo sin cambiar el contenido "
+                               "(escapa o reemplaza las comillas internas) y responde SOLO con el JSON:\n\n"
+                               + crudo, max_tokens)
+    return json.loads(crudo)
 
 
 def elegir_temas(noticias, tendencias, ya_publicadas):
