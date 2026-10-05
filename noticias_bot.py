@@ -318,6 +318,7 @@ Responde SOLO con JSON valido:
 "gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...",
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "..."}}, (3 placas en total)],
 "pregunta": "...",
+"tono": "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es una noticia importante, triste o delicada,
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
 "hashtags": ["#hasta", "#seis", "#hashtags"]}}
 
@@ -563,7 +564,17 @@ def generar_voces(textos, carpeta):
         return None
 
 
-def armar_reel(segmentos, textos_voz, salida, portada_salida):
+def elegir_musica(tono):
+    """Busca en musica/<tono>/ y, si no hay, en musica/. Devuelve la lista de temas posibles."""
+    def temas_en(carpeta):
+        if not os.path.isdir(carpeta):
+            return []
+        return [os.path.join(carpeta, m) for m in os.listdir(carpeta)
+                if m.lower().endswith((".mp3", ".wav", ".m4a"))]
+    return temas_en(os.path.join(CARPETA_MUSICA, tono or "")) or temas_en(CARPETA_MUSICA)
+
+
+def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     """segmentos: lista de {"fondo": video o None, "capa": png con el texto}."""
     tmp = tempfile.mkdtemp()
     voces = generar_voces(textos_voz, tmp)
@@ -614,8 +625,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida):
     voz = os.path.join(tmp, "voz.wav")
     correr(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lista_a, "-c", "copy", voz])
 
-    temas = [os.path.join(CARPETA_MUSICA, m) for m in os.listdir(CARPETA_MUSICA)
-             if m.lower().endswith((".mp3", ".wav", ".m4a"))] if os.path.isdir(CARPETA_MUSICA) else []
+    temas = elegir_musica(tono)
     audio = voz
     if temas:
         audio = os.path.join(tmp, "audio.wav")
@@ -861,7 +871,8 @@ def main():
     textos_voz.append((pregunta + " " if pregunta else "") + "Síguenos en QueloQue Viral.")
     reel = os.path.join(carpeta, f"reel-{id_corrida}.mp4")
     portada = os.path.join(carpeta, f"portada-{id_corrida}.jpg")
-    total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada)
+    total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada,
+                                            (guion.get("tono") or "").strip().lower())
     bancos = sorted({a.split(' (')[0] for a in autores})
     caption = texto_publicacion(guion, medios, creadores, bancos)
     sin_fondo = sum(1 for sg in segmentos[:-1] if not sg["fondo"])
