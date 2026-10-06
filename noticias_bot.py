@@ -25,6 +25,7 @@ import asyncio
 import tempfile
 import subprocess
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from datetime import datetime, timedelta, timezone
@@ -108,7 +109,8 @@ FUENTES_INTERES = {
 AVISO_SALUD = "Información general: no reemplaza la consulta con un profesional de la salud."
 ESTADO_INTERES = os.path.join("publicaciones", "estado_interes.json")
 # Horarios (hora Argentina) de cada tipo de publicacion; el resto del tiempo, noticias
-HORAS_INTERES = {9, 18}
+HORAS_INTERES = {9, 18, 21}              # 13 hs queda para la noticia del dia
+TEMAS_PEDIDOS = os.path.join("publicaciones", "temas_pedidos.json")
 
 PAISES_YOUTUBE = ["US", "GB", "MX", "ES", "AR", "CO"]
 TENDENCIAS_RSS = {p: f"https://trends.google.com/trending/rss?geo={p}" for p in ["US", "GB", "MX", "ES", "AR"]}
@@ -880,15 +882,18 @@ def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
                     "¿Esta imagen corresponde a lo buscado? Si lo buscado es una PERSONA, tiene que ser esa persona "
                     "(no otra). Si es un lugar, un animal, una comida, un objeto, un deporte o un concepto, alcanza con "
                     "que lo muestre claramente o algo directamente relacionado con el tema. Responde NO si es de otro "
-                    "tema o muestra a otra persona. Ademas tiene que ser una FOTOGRAFIA REAL de buena calidad, "
-                    "nitida y atractiva como fondo de un video: responde NO si es una postal, un cartel, un dibujo, "
-                    "una pintura, una ilustracion, un collage, una foto antigua o borrosa, una captura de pantalla, "
-                    "un grafico o mapa, o si tiene letras o textos grandes visibles. Responde solo SI o NO.") if estricto else (
+                    "tema o muestra a otra persona. Ademas tiene que ser una FOTOGRAFIA real y nitida: responde NO "
+                    "si es una postal, un cartel, un dibujo, una pintura, una ilustracion, un collage, una captura "
+                    "de pantalla, un grafico o mapa, si esta muy borrosa, o si tiene letras o textos GRANDES que "
+                    "ocupen buena parte de la imagen. Una foto de archivo o de hace algunos anos esta bien si se ve "
+                    "clara. Responde solo SI o NO.") if estricto else (
                     f"Noticia: {contexto}\nEscena buscada: {nombre}\n"
                     "Esta es una imagen ilustrativa de fondo para un video sobre la noticia. ¿La escena es coherente "
                     "con el tema (mismo deporte, mismo tipo de lugar o situacion)? NO hace falta que aparezca la "
-                    "persona de la noticia. Responde NO si es de otro tema, tiene banderas, textos o logos "
-                    "visibles, es de mala calidad o borrosa, o es inapropiada. Responde solo SI o NO.")}]}]})
+                    "persona de la noticia. Tiene que ser una FILMACION o FOTO REAL. Responde NO si es una "
+                    "animacion, dibujo animado, caricatura, ilustracion o grafico; si es de otro tema; si tiene "
+                    "banderas, textos o logos visibles; si es de mala calidad o borrosa; o si es inapropiada. "
+                    "Responde solo SI o NO.")}]}]})
         r.raise_for_status()
         respuesta = "".join(b.get("text", "") for b in r.json()["content"]).strip().upper()
         return respuesta.startswith("SI") or respuesta.startswith("SÍ")
@@ -1156,7 +1161,8 @@ def componer_foto(origen, destino):
 PROHIBIDAS_VIDEO = {"flag", "flags", "usa", "america", "american", "united states", "election", "elections",
                     "vote", "voting", "politics", "president", "trump", "biden", "text", "typography",
                     "logo", "brand", "map", "countdown", "calendar", "independence", "patriotic",
-                    "4th of july", "july 4", "us flag"}
+                    "4th of july", "july 4", "us flag", "animation", "animated", "cartoon", "illustration",
+                    "vector", "motion graphics", "2d", "3d render", "character", "infographic"}
 
 
 def video_apto(etiquetas, busqueda):
@@ -1222,7 +1228,8 @@ def buscar_video(busqueda, carpeta, usados, contexto=""):
             consultas = [busqueda] + ([busqueda.split()[-1]] if len(busqueda.split()) > 1 else [])
             for consulta in consultas:                     # si no hay nada, prueba algo mas simple
                 r = requests.get("https://pixabay.com/api/videos/", timeout=20, params={
-                    "key": PIXABAY_API_KEY, "q": consulta[:100], "safesearch": "true", "per_page": 20}).json()
+                    "key": PIXABAY_API_KEY, "q": consulta[:100], "safesearch": "true", "per_page": 20,
+                    "video_type": "film"}).json()                # solo videos filmados, nada de animaciones
                 DIAG["stock_busquedas"] += 1
                 hits = r.get("hits", [])
                 DIAG["stock_resultados"] += len(hits)
@@ -1573,15 +1580,95 @@ def mandar_borrador(reel, caption, id_corrida, modo_prueba, nota):
                             "text": f"¿Publico este Reel y la historia? Tienes {ESPERA_APROBACION_MIN} minutos."})
 
 
+def _cargar_pedidos():
+    if os.path.exists(TEMAS_PEDIDOS):
+        with open(TEMAS_PEDIDOS, encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def _guardar_pedidos(pedidos):
+    os.makedirs("publicaciones", exist_ok=True)
+    with open(TEMAS_PEDIDOS, "w", encoding="utf-8") as f:
+        json.dump(pedidos, f, ensure_ascii=False, indent=1)
+
+
+def _anotar_pedido(mensaje):
+    """Si el mensaje es '/tema ...' del dueno, lo guarda en la cola. Devuelve True si lo anoto."""
+    texto = (mensaje.get("text") or "").strip()
+    if str(mensaje.get("chat", {}).get("id")) != str(TELEGRAM_CHAT_ID) or not texto.lower().startswith("/tema"):
+        return False
+    pedido = texto[5:].strip(" :-")
+    if not pedido:
+        avisar("Escribí el tema después del comando, por ejemplo: /tema el pulpo que abre frascos")
+        return False
+    pedidos = _cargar_pedidos()
+    pedidos.append(pedido[:200])
+    _guardar_pedidos(pedidos)
+    avisar(f"📝 Anotado: «{pedido[:200]}». Va en el próximo Reel de interés general "
+           f"({len(pedidos)} en espera).")
+    return True
+
+
+def leer_pedidos_telegram():
+    """Lee los /tema que mandaste desde la ultima corrida y los guarda en la cola."""
+    r = tg("getUpdates", data={"timeout": 0, "allowed_updates": json.dumps(["message", "callback_query"])})
+    ultimo, nuevos = None, 0
+    for u in r.get("result", []):
+        ultimo = u["update_id"]
+        if u.get("message") and _anotar_pedido(u["message"]):
+            nuevos += 1
+    if ultimo is not None:
+        tg("getUpdates", data={"offset": ultimo + 1, "timeout": 0})     # marca como leidos
+    if nuevos:
+        subir_cambios("Temas pedidos por Telegram")
+
+
+def investigar_pedido(pedido):
+    """Busca material confiable sobre un tema pedido: Wikipedia y Google Noticias."""
+    notas, fuentes = [], []
+    for idioma in ("es", "en"):
+        try:
+            r = requests.get(f"https://{idioma}.wikipedia.org/w/api.php", headers=WIKI_UA, timeout=20, params={
+                "action": "query", "format": "json", "list": "search", "srsearch": pedido, "srlimit": 1}).json()
+            hits = r.get("query", {}).get("search", [])
+            if hits:
+                titulo = hits[0]["title"]
+                ext = requests.get(f"https://{idioma}.wikipedia.org/w/api.php", headers=WIKI_UA, timeout=20, params={
+                    "action": "query", "format": "json", "prop": "extracts", "explaintext": 1, "exintro": 0,
+                    "titles": titulo, "redirects": 1}).json()
+                for pg in (ext.get("query", {}).get("pages") or {}).values():
+                    if len(pg.get("extract", "")) > 300:
+                        notas.append((f"Wikipedia: {titulo}", pg["extract"][:5000]))
+                        fuentes.append("Wikipedia")
+                break
+        except Exception as e:
+            print(f"Wikipedia no respondio para el pedido: {e}")
+    try:
+        q = urllib.parse.quote(pedido)
+        items = leer_rss(bajar(f"{GN}/search?q={q}&hl=es-419&gl=US&ceid=US:es-419"), "Google Noticias")[:6]
+        if items:
+            notas.append(("Noticias recientes", "\n".join(f"{n['titulo']} ({n['fuente']}). {n['descripcion']}"
+                                                           for n in items)))
+            fuentes += [n["fuente"] for n in items[:2] if n["fuente"] not in fuentes]
+    except Exception as e:
+        print(f"Google Noticias no respondio para el pedido: {e}")
+    return notas, fuentes[:3]
+
+
 def esperar_respuesta(id_corrida):
     r = tg("getUpdates", data={"offset": -1, "timeout": 0})
     offset = (r.get("result") or [{"update_id": 0}])[-1]["update_id"]
     fin = time.time() + ESPERA_APROBACION_MIN * 60
     while time.time() < fin:
         r = tg("getUpdates", data={"offset": offset + 1, "timeout": 30,
-                                   "allowed_updates": json.dumps(["callback_query"])})
+                                   "allowed_updates": json.dumps(["callback_query", "message"])})
         for u in r.get("result", []):
             offset = u["update_id"]
+            if u.get("message"):
+                if _anotar_pedido(u["message"]):
+                    subir_cambios("Tema pedido por Telegram")
+                continue
             cb = u.get("callback_query")
             if not cb or str(cb["message"]["chat"]["id"]) != str(TELEGRAM_CHAT_ID):
                 continue
@@ -1879,8 +1966,35 @@ def main():
         contenido = "interes" if datetime.now(ARGENTINA).hour in HORAS_INTERES else "noticias"
     categoria, indice_cat, aviso = "", None, ""
     guion, fuentes = None, []
+    if INTENTO["n"] == 0:
+        try:
+            leer_pedidos_telegram()
+        except Exception as e:
+            print(f"No pude leer los pedidos de Telegram: {e}")
+    pedidos = _cargar_pedidos()
 
-    if contenido == "interes":
+    if contenido == "interes" and pedidos and INTENTO["n"] == 0:
+        # Primero los temas que pediste con /tema
+        pedido = pedidos.pop(0)
+        _guardar_pedidos(pedidos)
+        subir_cambios("Tema pedido en produccion")
+        avisar(f"🎯 Armando el Reel que pediste: «{pedido}»")
+        notas, fuentes = investigar_pedido(pedido)
+        if sum(len(t) for _, t in notas) < 400:
+            avisar(f"⚠️ No encontré información confiable suficiente sobre «{pedido}». Sigo con el contenido normal.")
+        else:
+            categoria = "tema pedido"
+            try:
+                guion = completar_guion(escribir_guion(pedido, notas, "interes", "tema pedido"))
+                guion = revisar_datos(guion, notas)
+            except Exception as e:
+                print(f"No se pudo armar el pedido: {e}")
+                guion = None
+            if guion and any(p in pedido.lower() for p in ("salud", "dieta", "aliment", "nutri", "mental",
+                                                             "ansiedad", "dormir", "sueño", "ejercicio")):
+                aviso = AVISO_SALUD
+
+    if contenido == "interes" and not guion:
         indice_cat, categoria = proxima_categoria()
         items, fallidas = juntar_interes(categoria)
         print(f"Interes general: {categoria}. {len(items)} articulos. Fuentes con problemas: {fallidas or 'ninguna'}")
@@ -1907,7 +2021,7 @@ def main():
             aviso = AVISO_SALUD
         if guion:
             guion["categoria"] = guion.get("categoria") or categoria.upper()
-    else:
+    elif not guion:
         noticias, tendencias, fallidas = juntar_noticias()
         print(f"{len(noticias)} noticias leidas. Fuentes con problemas: {fallidas or 'ninguna'}")
         if len(noticias) < 15:
@@ -2089,7 +2203,12 @@ def main():
     caption = texto_publicacion(guion, medios, creadores, bancos, aviso)
     sin_fondo = sum(1 for sg in segmentos[:-1]
                     if not (sg.get("fondo") or sg.get("foto") or sg.get("fotos") or sg.get("video_real")))
-    reales = sum(1 for sg in segmentos[:-1] if sg.get("foto") or sg.get("fotos") or sg.get("video_real"))
+    def _es_ia(sg):
+        return "ia" in os.path.basename(str(sg.get("foto") or "")).split("_")[0][:3]
+    reales = sum(1 for sg in segmentos[:-1] if (sg.get("foto") or sg.get("fotos") or sg.get("video_real"))
+                 and not _es_ia(sg))
+    stock = sum(1 for sg in segmentos[:-1] if sg.get("fondo"))
+    ilustradas = sum(1 for sg in segmentos[:-1] if sg.get("foto") and _es_ia(sg))
 
     nota = []
     if not con_voz:
@@ -2098,7 +2217,8 @@ def main():
         nota.append("sin musica (no hay archivos en la carpeta 'musica')")
     if sin_fondo:
         nota.append(f"{sin_fondo} partes sin video de fondo (no se encontro video o falta la clave de Pixabay)")
-    nota.append(f"{reales} de {len(segmentos) - 1} partes con imágenes reales del protagonista")
+    nota.append(f"Partes: {reales} con foto/video real del tema, {stock} con video de stock, "
+                f"{ilustradas} con ilustración IA (de {len(segmentos) - 1})")
     distintos = len({str(sorted((k, str(v)) for k, v in sg.items() if k in ("foto", "fotos", "fondo", "video_real")))
                      for sg in segmentos[:-1]})
     ia_txt = ("SIN CLAVES (falta CF_ACCOUNT_ID / CF_API_TOKEN)" if not (CF_ACCOUNT_ID and CF_API_TOKEN)
