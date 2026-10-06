@@ -79,6 +79,33 @@ FUENTES_RSS = {
     "Google News UK": f"{GN}?hl=en-GB&gl=GB&ceid=GB:en",
     "Google News World": f"{GN}/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en",
 }
+# ---- Contenido de INTERES GENERAL ("virales de todos los tiempos") ----
+# Se alternan con las noticias del dia: 2 noticias + 2 de interes general por dia.
+CATEGORIAS_INTERES = [
+    "espacio y astronomia", "naturaleza y animales", "alimentacion y nutricion", "datos curiosos",
+    "ciencia y descubrimientos", "pensamiento estoico", "salud y bienestar", "deportes: historias y datos",
+    "salud mental y habitos", "historia y personajes",
+]
+CATEGORIAS_SALUD = {"alimentacion y nutricion", "salud y bienestar", "salud mental y habitos"}
+FUENTES_INTERES = {
+    "NASA": ("https://www.nasa.gov/feed/", {"espacio y astronomia", "ciencia y descubrimientos"}),
+    "NASA Ciencia": ("https://science.nasa.gov/feed/", {"espacio y astronomia", "ciencia y descubrimientos", "naturaleza y animales"}),
+    "ScienceDaily": ("https://www.sciencedaily.com/rss/all.xml", {"ciencia y descubrimientos", "salud y bienestar", "naturaleza y animales", "alimentacion y nutricion"}),
+    "ScienceDaily Salud": ("https://www.sciencedaily.com/rss/health_medicine.xml", {"salud y bienestar", "alimentacion y nutricion", "salud mental y habitos"}),
+    "ScienceDaily Mente": ("https://www.sciencedaily.com/rss/mind_brain.xml", {"salud mental y habitos", "ciencia y descubrimientos"}),
+    "ScienceDaily Plantas y Animales": ("https://www.sciencedaily.com/rss/plants_animals.xml", {"naturaleza y animales"}),
+    "Smithsonian": ("https://www.smithsonianmag.com/rss/latest_articles/", {"historia y personajes", "naturaleza y animales", "ciencia y descubrimientos", "datos curiosos"}),
+    "OMS": ("https://www.who.int/rss-feeds/news-english.xml", {"salud y bienestar", "alimentacion y nutricion"}),
+    "Harvard Health": ("https://www.health.harvard.edu/blog/feed", {"salud y bienestar", "alimentacion y nutricion", "salud mental y habitos"}),
+    "The Conversation": ("https://theconversation.com/es/articles.atom", {"ciencia y descubrimientos", "salud y bienestar", "salud mental y habitos", "historia y personajes", "naturaleza y animales"}),
+    "BBC Mundo Ciencia": ("https://feeds.bbci.co.uk/mundo/temas/ciencia/rss.xml", {"ciencia y descubrimientos", "espacio y astronomia", "naturaleza y animales"}),
+    "BBC Mundo Salud": ("https://feeds.bbci.co.uk/mundo/temas/salud/rss.xml", {"salud y bienestar", "alimentacion y nutricion", "salud mental y habitos"}),
+}
+AVISO_SALUD = "Información general: no reemplaza la consulta con un profesional de la salud."
+ESTADO_INTERES = os.path.join("publicaciones", "estado_interes.json")
+# Horarios (hora Argentina) de cada tipo de publicacion; el resto del tiempo, noticias
+HORAS_INTERES = {9, 18}
+
 PAISES_YOUTUBE = ["US", "GB", "MX", "ES", "AR", "CO"]
 TENDENCIAS_RSS = {p: f"https://trends.google.com/trending/rss?geo={p}" for p in ["US", "GB", "MX", "ES", "AR"]}
 # ==============================================================
@@ -92,7 +119,7 @@ PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").strip()
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").strip()
-MAX_ILUSTRACIONES_IA = 3                   # por Reel (la cuota gratis de Cloudflare es diaria)
+MAX_ILUSTRACIONES_IA = 5                   # por Reel (la cuota gratis de Cloudflare es diaria)
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 YT_CLIENT_ID = os.environ.get("YT_CLIENT_ID", "")
 YT_CLIENT_SECRET = os.environ.get("YT_CLIENT_SECRET", "")
@@ -254,6 +281,80 @@ def juntar_noticias():
     return unicas[:300], tendencias, fallidas
 
 
+def juntar_interes(categoria):
+    """Lee las fuentes de divulgacion que corresponden a la categoria (ultimos 30 dias)."""
+    limite = datetime.now(timezone.utc) - timedelta(days=30)
+    items, fallidas = [], []
+    for nombre, (url, cats) in FUENTES_INTERES.items():
+        if categoria not in cats:
+            continue
+        try:
+            for n in leer_rss(bajar(url), nombre):
+                if n["fecha"] is None or n["fecha"] >= limite:
+                    n["fuente"] = nombre
+                    items.append(n)
+        except Exception as e:
+            fallidas.append(f"{nombre} ({type(e).__name__})")
+    return items[:150], fallidas
+
+
+def proxima_categoria():
+    estado = {}
+    if os.path.exists(ESTADO_INTERES):
+        with open(ESTADO_INTERES, encoding="utf-8") as f:
+            estado = json.load(f)
+    i = estado.get("indice", -1) + 1
+    return i % len(CATEGORIAS_INTERES), CATEGORIAS_INTERES[i % len(CATEGORIAS_INTERES)]
+
+
+def guardar_categoria(indice):
+    os.makedirs("publicaciones", exist_ok=True)
+    with open(ESTADO_INTERES, "w", encoding="utf-8") as f:
+        json.dump({"indice": indice}, f)
+
+
+def elegir_tema_interes(categoria, items, ya_publicadas):
+    lista = "\n".join(f"[{i}] ({n['fuente']}) {n['titulo']} | {n['descripcion']}" for i, n in enumerate(items))
+    return preguntar_ia(f"""Eres editor de "QueloQue Viral", cuenta de Instagram en espanol para todo el publico
+hispanohablante. Ademas de noticias, publicamos contenido de INTERES GENERAL que atrapa: "virales de todos los
+tiempos". Categoria de hoy: {categoria}.
+
+Elige 3 temas posibles, en orden de preferencia, que generen curiosidad y ganas de compartir.
+- Si hay articulos abajo, prioriza los mas sorprendentes (indica sus numeros en "ids").
+- Si la categoria no necesita articulos (ej: pensamiento estoico, datos curiosos, historia) o no hay buenos,
+  puedes proponer un tema "de conocimiento" con ids vacios, SOLO si es un hecho ampliamente documentado,
+  y en "fuente_texto" indica la fuente reconocida (ej: "Marco Aurelio, Meditaciones", "NASA", "OMS",
+  "Enciclopedia Britannica").
+- PROHIBIDO: consejos medicos personalizados, dietas, dosis o tratamientos; suicidio, autolesiones,
+  trastornos alimentarios; pseudociencia; frases atribuidas sin seguridad de su autor.
+- No repitas: {ya_publicadas or 'nada'}
+
+Responde SOLO con JSON valido:
+{{"temas": [{{"tema": "descripcion corta", "ids": [numeros], "fuente_texto": "fuente si ids vacios"}}]}}
+
+ARTICULOS DISPONIBLES:
+{lista or "ninguno"}""")["temas"]
+
+
+def revisar_datos(guion, notas):
+    """Segunda revision por la IA: saca cualquier dato dudoso antes de publicar."""
+    material = "\n\n".join(f"--- {f} ---\n{t[:2500]}" for f, t in notas) or "sin articulos (tema de conocimiento)"
+    revisado = preguntar_ia(f"""Eres verificador de datos de una cuenta de divulgacion. Revisa este guion.
+Si un dato no esta respaldado por las notas o no es un hecho ampliamente documentado, eliminalo o
+reformulalo de forma prudente. Si es una cita, debe ser real y del autor indicado; si dudas, quita la cita
+y usa una idea general de ese autor sin comillas. No agregues datos nuevos. Mantén EXACTAMENTE la misma
+estructura JSON y los mismos campos.
+
+GUION:
+{json.dumps(guion, ensure_ascii=False)}
+
+NOTAS:
+{material}
+
+Responde SOLO con el JSON del guion revisado.""", 3000)
+    return completar_guion({**guion, **revisado})
+
+
 # ======================== 2. LEER LA NOTA COMPLETA ========================
 class _Parrafos(HTMLParser):
     def __init__(self):
@@ -374,17 +475,30 @@ def completar_guion(g):
     return g
 
 
-def escribir_guion(tema, notas):
+def escribir_guion(tema, notas, tipo="noticia", categoria=""):
     material = "\n\n".join(f"--- {fuente} ---\n{texto}" for fuente, texto in notas)
-    return preguntar_ia(f"""Eres guionista de "QueloQue Viral", cuenta de Instagram de noticias para todo el publico hispanohablante.
+    if tipo == "interes":
+        reglas_datos = f"""- Es contenido de INTERES GENERAL (categoria: {categoria}), no una noticia del dia.
+- Usa los hechos de las notas de abajo; si no hay notas, usa SOLO conocimiento ampliamente documentado y
+  aceptado. No inventes cifras, fechas, citas ni estudios.
+- En salud, alimentacion o salud mental: informacion general y prudente, sin consejos personalizados,
+  dietas, dosis ni tratamientos.
+- En pensamiento estoico: solo citas reales y bien atribuidas (Marco Aurelio, Seneca, Epicteto), indicando
+  la obra; explica su sentido aplicado a la vida diaria.
+- Estructura de las 3 placas: 1) el dato o idea central, 2) el detalle mas sorprendente, 3) por que importa
+  o como aplicarlo."""
+    else:
+        reglas_datos = """- Usa SOLO hechos que esten en las notas de abajo. Si un dato no esta, NO lo pongas. No inventes cifras,
+  nombres, fechas ni declaraciones."""
+    return preguntar_ia(f"""Eres guionista de "QueloQue Viral", cuenta de Instagram para todo el publico hispanohablante.
 Escribe el guion de UN Reel de 30 a 40 segundos sobre este tema: {tema}
 
 REGLAS ESTRICTAS:
-- Usa SOLO hechos que esten en las notas de abajo. Si un dato no esta, NO lo pongas. No inventes cifras,
-  nombres, fechas ni declaraciones.
+{reglas_datos}
 - Si las notas se contradicen, menciona solo lo que coincide.
 - Escribe TODO con tus propias palabras, en espanol neutro (usa "tu"). No copies frases de las notas
-  y no uses citas textuales. Si las notas estan en ingles, traduce los hechos con cuidado.
+  y no uses citas textuales (excepcion: en pensamiento estoico, UNA cita breve, real y bien atribuida).
+  Si las notas estan en ingles, traduce los hechos con cuidado.
 - Tono: claro, atrapante, sin exagerar ni dramatizar.
 
 ESTRUCTURA:
@@ -438,7 +552,7 @@ Responde SOLO con JSON valido:
 "hashtags": ["#hasta", "#seis", "#hashtags"]}}
 
 NOTAS DE LOS MEDIOS:
-{material}""", 2500)
+{material or "sin notas: usa solo conocimiento ampliamente documentado"}""", 2500)
 
 
 # ======================== 3. ARMAR LAS PLACAS ========================
@@ -590,7 +704,7 @@ def capa_desarrollo(p, numero, total, categoria, ruta, n=None):
     img.save(ruta)
 
 
-def capa_cierre(medios, creadores, autores_video, ruta, pregunta=""):
+def capa_cierre(medios, creadores, autores_video, ruta, pregunta="", aviso=""):
     img = Image.new("RGBA", (ANCHO, ALTO), FONDO + (225,))
     d = ImageDraw.Draw(img)
     y = ARRIBA - 40
@@ -611,6 +725,10 @@ def capa_cierre(medios, creadores, autores_video, ruta, pregunta=""):
     f = fuente(True, 42)
     linea = f"Síguenos en {NOMBRE_CUENTA}"
     d.text(((ANCHO - f.getlength(linea)) / 2, cy + r + 40), linea, font=f, fill=TEXTO)
+    if aviso:
+        fa = fuente(False, 26)
+        for k, l in enumerate(partir(aviso, fa, ANCHO - 2 * MARGEN)):
+            d.text(((ANCHO - fa.getlength(l)) / 2, cy + r + 110 + k * 34), l, font=fa, fill=TEXTO_SUAVE)
     img.save(ruta)
 
 
@@ -727,6 +845,44 @@ DIAG = {"candidatas": 0, "aceptadas": 0, "rechazadas": 0, "stock_aceptados": 0, 
         "fuentes_con_error": set()}
 
 
+NASA_ACTIVA = {"si": False}       # se activa en temas de espacio y ciencia
+
+
+def _candidatos_nasa(nombre, videos=False):
+    """Biblioteca de imagenes y videos de la NASA (dominio publico, sin clave)."""
+    if not NASA_ACTIVA["si"]:
+        return []
+    try:
+        r = requests.get("https://images-api.nasa.gov/search", timeout=20, headers=WIKI_UA,
+                         params={"q": nombre, "media_type": "video" if videos else "image"}).json()
+    except Exception as e:
+        print(f"NASA no respondio para '{nombre}': {e}")
+        DIAG["fuentes_con_error"].add("NASA")
+        return []
+    salida = []
+    for it in (r.get("collection", {}).get("items") or [])[:12]:
+        datos = (it.get("data") or [{}])[0]
+        texto = f"{datos.get('title', '')} {datos.get('description', '')[:200]}"
+        if any(p in texto.lower() for p in ("logo", "insignia", "patch", "chart", "graphic")):
+            continue
+        if videos:
+            try:
+                archivos = requests.get(it["href"], timeout=20, headers=WIKI_UA).json()
+                mp4 = next((u for u in archivos if u.endswith(("~mobile.mp4", "~medium.mp4"))), None) or \
+                    next((u for u in archivos if u.endswith(".mp4")), None)
+                if mp4:
+                    salida.append({"url": mp4.replace("http://", "https://"), "titulo": f"nasa:{datos.get('nasa_id')}",
+                                   "credito": "NASA (dominio público)"})
+            except Exception:
+                continue
+        else:
+            href = ((it.get("links") or [{}])[0]).get("href", "")
+            if href:
+                salida.append({"url": href.replace("~thumb.jpg", "~large.jpg"), "titulo": f"nasa:{datos.get('nasa_id')}",
+                               "credito": "NASA (dominio público)"})
+    return salida
+
+
 def _candidatos_openverse(nombre, claves):
     """Openverse: buscador de imagenes con licencia libre (Flickr y otros archivos), incluidas las cuentas
     oficiales de gobiernos y parlamentos que publican sus fotos para libre uso. Sin clave."""
@@ -787,6 +943,7 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
         except Exception as e:
             print(f"Commons no respondio para '{busqueda}': {e}")
             DIAG["fuentes_con_error"].add("Wikimedia")
+    candidatos += _candidatos_nasa(nombre)
     candidatos += _candidatos_openverse(nombre, claves)
     candidatos += _candidatos_pixabay_fotos(nombre)
     # sin repetidos, mezclando un poco para que no salgan siempre las mismas
@@ -838,7 +995,8 @@ def buscar_video_real(nombre, carpeta, usados, contexto=""):
         print(f"Commons (videos) no respondio para '{nombre}': {e}")
         return None, None
     claves = _palabras_clave(nombre)
-    candidatos = [c for c in candidatos if _titulo_relacionado(c["titulo"], claves)][:3]
+    candidatos = _candidatos_nasa(nombre, videos=True)[:3] + \
+        [c for c in candidatos if _titulo_relacionado(c["titulo"], claves)][:3]
     for c in candidatos:
         if c["titulo"] in usados:
             continue
@@ -869,16 +1027,16 @@ IA_USADAS = {"cantidad": 0}
 
 
 def marcar_ilustracion(ruta):
-    """Sello visible 'ILUSTRACIÓN IA' en la esquina de la imagen: transparencia con el publico."""
-    img = Image.open(ruta).convert("RGB")
-    d = ImageDraw.Draw(img)
-    f = fuente(True, 26)
-    texto = "  ILUSTRACIÓN IA  "
+    """Aclaracion 'Imagen generada con IA' chiquita y discreta, abajo a la derecha."""
+    img = Image.open(ruta).convert("RGBA")
+    capa = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(capa)
+    f = fuente(False, 20)
+    texto = "Imagen generada con IA"
     w = f.getlength(texto)
-    x, y = ANCHO - 40 - 20 - w, ARRIBA + 110
-    d.rounded_rectangle([x, y, x + w, y + 44], radius=10, fill=(10, 12, 20))
-    d.text((x, y + 7), texto, font=f, fill=ACENTO)
-    img.save(ruta, "JPEG", quality=92)
+    d.text((ANCHO - MARGEN - w, ABAJO + 70), texto, font=f, fill=(255, 255, 255, 150))
+    img.alpha_composite(capa)
+    img.convert("RGB").save(ruta, "JPEG", quality=92)
 
 
 def generar_ilustracion(descripcion, carpeta, contexto=""):
@@ -918,20 +1076,18 @@ def generar_ilustracion(descripcion, carpeta, contexto=""):
 
 
 def componer_foto(origen, destino):
-    """Arma un fondo vertical: la misma foto desenfocada de fondo y la foto completa arriba,
-    para que no se recorten las caras y el texto de abajo se lea bien."""
+    """Lleva cualquier foto (vertical u horizontal) a PANTALLA COMPLETA vertical (1080x1920).
+    Recorta lo que sobra: en fotos verticales prioriza la parte de arriba (donde suelen estar las caras)
+    y en las horizontales toma el centro."""
     foto = Image.open(origen).convert("RGB")
-    fondo = foto.copy()
-    escala = max(ANCHO / fondo.width, ALTO / fondo.height)
-    fondo = fondo.resize((int(fondo.width * escala) + 1, int(fondo.height * escala) + 1))
-    x, y = (fondo.width - ANCHO) // 2, (fondo.height - ALTO) // 2
-    fondo = fondo.crop((x, y, x + ANCHO, y + ALTO)).filter(ImageFilter.GaussianBlur(40))
-    fondo = ImageEnhance.Brightness(fondo).enhance(0.45)
-    caja_w, caja_h, caja_y = ANCHO - 2 * 40, 640, ARRIBA + 90
-    escala = min(caja_w / foto.width, caja_h / foto.height)
-    chica = foto.resize((int(foto.width * escala), int(foto.height * escala)), Image.LANCZOS)
-    fondo.paste(chica, ((ANCHO - chica.width) // 2, caja_y + (caja_h - chica.height) // 2))
-    fondo.save(destino, "JPEG", quality=92)
+    escala = max(ANCHO / foto.width, ALTO / foto.height)
+    foto = foto.resize((int(foto.width * escala) + 1, int(foto.height * escala) + 1), Image.LANCZOS)
+    x = (foto.width - ANCHO) // 2
+    sobra_y = foto.height - ALTO
+    y = int(sobra_y * 0.25)                        # un poco hacia arriba, para no cortar cabezas
+    foto = foto.crop((x, y, x + ANCHO, y + ALTO))
+    foto = ImageEnhance.Brightness(foto).enhance(0.92)
+    foto.save(destino, "JPEG", quality=92)
 
 
 # Palabras que delatan un video que puede confundir (banderas, fechas, politica, textos)
@@ -1110,13 +1266,9 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     for i, (seg, dur) in enumerate(zip(segmentos, duraciones)):
         clip = os.path.join(tmp, f"clip{i}.mp4")
         if seg.get("video_real"):
-            caja_w, caja_h, caja_y = ANCHO - 80, 640, ARRIBA + 90
             entrada = ["-stream_loop", "-1", "-i", seg["video_real"]]
-            base = (f"[0:v]fps={fps},split[a][b];"
-                    f"[a]scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,crop={ANCHO}:{ALTO},"
-                    f"boxblur=30:2,eq=brightness=-0.35[bg];"
-                    f"[b]scale={caja_w}:{caja_h}:force_original_aspect_ratio=decrease[fg];"
-                    f"[bg][fg]overlay=(W-w)/2:{caja_y}+({caja_h}-h)/2,setsar=1[f]")
+            base = (f"[0:v]fps={fps},scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,"
+                    f"crop={ANCHO}:{ALTO},setsar=1,eq=brightness=-0.06[f]")
         elif seg.get("fotos"):
             # Varias fotos en la misma parte: cada una con su zoom, una detras de otra
             sub = []
@@ -1234,7 +1386,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     return total, bool(voces), bool(temas)
 
 
-def texto_publicacion(g, medios, creadores, bancos):
+def texto_publicacion(g, medios, creadores, bancos, aviso=""):
     etiquetas = list(dict.fromkeys(HASHTAGS_FIJOS + [h if h.startswith("#") else "#" + h
                                                       for h in g.get("hashtags", [])]))[:12]
     lineas = [f"🔥 {g['gancho']}", "", g["descripcion"], ""]
@@ -1250,7 +1402,9 @@ def texto_publicacion(g, medios, creadores, bancos):
             lineas.append(f"🎞 Imágenes: {', '.join(reales_b)}")
         if len(reales_b) < len(bancos):
             lineas.append("🎨 Incluye recreaciones ilustrativas generadas con IA (no son fotos reales del hecho).")
-    lineas += ["Resumen elaborado a partir de lo publicado por los medios citados.", "",
+    if aviso:
+        lineas.append(f"⚕️ {aviso}")
+    lineas += ["Resumen elaborado a partir de las fuentes citadas.", "",
                f"Síguenos en {NOMBRE_CUENTA} para enterarte de lo más viral del mundo.",
                f"🟡 {FIRMA} | QueloQue Viral", "", " ".join(etiquetas)]
     return "\n".join(lineas)[:2150]
@@ -1333,7 +1487,7 @@ def guardar_historial(historial_nuevo):
     subir_cambios("Historial")
 
 
-def preparar_sitio(archivos, caption, titulos):
+def preparar_sitio(archivos, caption, titulos, indice_categoria=None):
     """Deja los archivos en la carpeta 'sitio' para que GitHub Pages los publique
     (lo hace el paso siguiente del workflow) y guarda lo pendiente de publicar."""
     os.makedirs("sitio", exist_ok=True)
@@ -1341,7 +1495,7 @@ def preparar_sitio(archivos, caption, titulos):
         shutil.copy(a, "sitio")
     with open("pendiente.json", "w", encoding="utf-8") as f:
         json.dump({"archivos": [os.path.basename(a) for a in archivos], "caption": caption,
-                   "titulos": titulos}, f, ensure_ascii=False)
+                   "titulos": titulos, "indice_categoria": indice_categoria}, f, ensure_ascii=False)
 
 
 def esperar_urls(urls):
@@ -1571,41 +1725,80 @@ def main():
         with open(HISTORIAL, encoding="utf-8") as f:
             historial = json.load(f)
 
-    noticias, tendencias, fallidas = juntar_noticias()
-    print(f"{len(noticias)} noticias leidas. Fuentes con problemas: {fallidas or 'ninguna'}")
-    if len(noticias) < 15:
-        avisar(f"⚠️ Solo consegui {len(noticias)} noticias (fallaron: {', '.join(fallidas)}). No armo el Reel.")
-        return
+    contenido = (os.environ.get("CONTENIDO") or "auto").strip().lower()
+    if contenido not in ("noticias", "interes"):
+        contenido = "interes" if datetime.now(ARGENTINA).hour in HORAS_INTERES else "noticias"
+    categoria, indice_cat, aviso = "", None, ""
+    guion, fuentes = None, []
 
-    # Elige el tema y lee las notas completas (si el primero no se puede leer, prueba el siguiente)
-    guion = None
-    for tema in elegir_temas(noticias, tendencias, "; ".join(historial[-20:])):
-        ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(noticias)]
-        notas, fuentes = [], []
-        for i in sorted(ids, key=lambda i: not es_directo(noticias[i])):
-            n = noticias[i]
-            if n["fuente"] in fuentes or n.get("youtube"):
-                continue
-            texto = leer_nota(n["link"]) if es_directo(n) else ""
-            if len(texto) < 400:
-                texto = f"{n['titulo']}. {n['descripcion']}"
-            notas.append((n["fuente"], texto))
-            fuentes.append(n["fuente"])
-            if len(notas) == 3:
+    if contenido == "interes":
+        indice_cat, categoria = proxima_categoria()
+        items, fallidas = juntar_interes(categoria)
+        print(f"Interes general: {categoria}. {len(items)} articulos. Fuentes con problemas: {fallidas or 'ninguna'}")
+        for tema in elegir_tema_interes(categoria, items, "; ".join(historial[-30:])):
+            ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(items)]
+            notas, fuentes = [], []
+            for i in ids[:3]:
+                n = items[i]
+                texto = leer_nota(n["link"]) if es_directo(n) else ""
+                notas.append((n["fuente"], texto if len(texto) >= 400 else f"{n['titulo']}. {n['descripcion']}"))
+                if n["fuente"] not in fuentes:
+                    fuentes.append(n["fuente"])
+            if not ids:
+                if not tema.get("fuente_texto"):
+                    continue
+                fuentes = [tema["fuente_texto"]]
+            try:
+                guion = completar_guion(escribir_guion(tema["tema"], notas, "interes", categoria))
+                guion = revisar_datos(guion, notas)
                 break
-        for i in ids:                                     # material de YouTube, si el tema viene de ahi
-            n = noticias[i]
-            if n.get("youtube") and n["fuente"] not in fuentes and len(fuentes) < 5:
-                notas.append((n["fuente"], f"{n['titulo']}. {n.get('texto_largo', '')}"))
+            except Exception as e:
+                print(f"No se pudo armar '{tema.get('tema')}': {e}")
+        if categoria in CATEGORIAS_SALUD:
+            aviso = AVISO_SALUD
+        if guion:
+            guion["categoria"] = guion.get("categoria") or categoria.upper()
+    else:
+        noticias, tendencias, fallidas = juntar_noticias()
+        print(f"{len(noticias)} noticias leidas. Fuentes con problemas: {fallidas or 'ninguna'}")
+        if len(noticias) < 15:
+            avisar(f"⚠️ Solo consegui {len(noticias)} noticias (fallaron: {', '.join(fallidas)}). No armo el Reel.")
+            return
+
+        # Elige el tema y lee las notas completas (si el primero no se puede leer, prueba el siguiente)
+        guion = None
+        for tema in elegir_temas(noticias, tendencias, "; ".join(historial[-20:])):
+            ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(noticias)]
+            notas, fuentes = [], []
+            for i in sorted(ids, key=lambda i: not es_directo(noticias[i])):
+                n = noticias[i]
+                if n["fuente"] in fuentes or n.get("youtube"):
+                    continue
+                texto = leer_nota(n["link"]) if es_directo(n) else ""
+                if len(texto) < 400:
+                    texto = f"{n['titulo']}. {n['descripcion']}"
+                notas.append((n["fuente"], texto))
                 fuentes.append(n["fuente"])
-        if sum(len(t) for _, t in notas) >= 800:
-            guion = completar_guion(escribir_guion(tema["tema"], notas))
-            break
-        print(f"Poca informacion sobre '{tema['tema']}', pruebo el siguiente.")
+                if len(notas) == 3:
+                    break
+            for i in ids:                                     # material de YouTube, si el tema viene de ahi
+                n = noticias[i]
+                if n.get("youtube") and n["fuente"] not in fuentes and len(fuentes) < 5:
+                    notas.append((n["fuente"], f"{n['titulo']}. {n.get('texto_largo', '')}"))
+                    fuentes.append(n["fuente"])
+            if sum(len(t) for _, t in notas) >= 800:
+                guion = completar_guion(escribir_guion(tema["tema"], notas))
+                break
+            print(f"Poca informacion sobre '{tema['tema']}', pruebo el siguiente.")
+
     if not guion:
         avisar("⚠️ No consegui informacion suficiente para armar un Reel confiable. Salteo esta vuelta.")
         return
 
+    texto_tema = (categoria + " " + guion["gancho"] + " " + " ".join(guion.get("palabras_clave") or [])).lower()
+    NASA_ACTIVA["si"] = any(p in texto_tema for p in ("espacio", "astronom", "nasa", "planeta", "luna", "marte",
+                                                        "estrella", "galaxia", "cohete", "satélite", "satelite",
+                                                        "eclipse", "asteroide", "telescopio", "ciencia", "tierra"))
     carpeta = tempfile.mkdtemp()
     medios = [f for f in fuentes if not f.startswith("YouTube:")][:3]
     creadores = [f.replace("YouTube: ", "") + " (YouTube)" for f in fuentes if f.startswith("YouTube:")][:2]
@@ -1647,13 +1840,19 @@ def main():
 
     ideas_ia = [x for x in (guion.get("ilustraciones") or []) if isinstance(x, str) and x.strip()]
 
+    ideas_usadas = set()
+
     def _ilustracion(indice):
-        if not ideas_ia:
-            return None
-        ruta, credito = generar_ilustracion(ideas_ia[indice % len(ideas_ia)], carpeta, contexto)
-        if ruta:
-            _registrar(credito)
-            return {"foto": ruta}
+        """Genera una ilustracion con una idea que todavia no se uso en este Reel."""
+        for k in range(len(ideas_ia)):
+            idea = ideas_ia[(indice + k) % len(ideas_ia)]
+            if idea in ideas_usadas:
+                continue
+            ideas_usadas.add(idea)
+            ruta, credito = generar_ilustracion(idea, carpeta, contexto)
+            if ruta:
+                _registrar(credito)
+                return {"foto": ruta}
         return None
 
     def fondo(indice):
@@ -1684,12 +1883,12 @@ def main():
                     break
         if not media and indice == 0:                     # 5) gancho sin foto: ilustracion
             media = _ilustracion(indice)
+        if not media:                                     # 6) ultimo intento: otra ilustracion distinta
+            media = _ilustracion(indice + 1)
         if media:
             aprobados.append(media)
             return media
-        if aprobados:                                     # mejor repetir algo correcto que algo equivocado
-            return dict(aprobados[indice % len(aprobados)])
-        return {"fondo": None}
+        return {"fondo": None}                            # fondo de marca: nunca se repite una imagen
 
     segmentos = [{**fondo(0), "capa": os.path.join(carpeta, "c0.png"),
                   "render": lambda n, ruta: capa_gancho(guion, ruta, n),
@@ -1702,14 +1901,8 @@ def main():
                "n_palabras": palabras_de(p["pantalla"])}
         capa_desarrollo(p, i, len(guion["placas"]), guion["categoria"], seg["capa"])
         segmentos.append(seg)
-    # Si alguna parte quedo sin fondo pero otras si tienen, reusa uno verificado
-    for i, sg in enumerate(segmentos):
-        if not (sg.get("fondo") or sg.get("foto") or sg.get("fotos") or sg.get("video_real")) and aprobados:
-            sg.update(aprobados[i % len(aprobados)])
-    cierre = {"fondo": segmentos[0].get("fondo"), "foto": segmentos[0].get("foto"),
-              "fotos": segmentos[0].get("fotos"),
-              "video_real": segmentos[0].get("video_real"), "capa": os.path.join(carpeta, "cierre.png")}
-    capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""))
+    cierre = {"fondo": None, "capa": os.path.join(carpeta, "cierre.png")}     # cierre con fondo de marca
+    capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""), aviso)
     segmentos.append(cierre)
 
     textos_voz = [guion.get("voz_gancho") or guion["gancho"]] + [p["voz"] for p in guion["placas"][:3]]
@@ -1720,7 +1913,7 @@ def main():
     total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada,
                                             (guion.get("tono") or "").strip().lower())
     bancos = autores                                      # créditos completos (autor y licencia)
-    caption = texto_publicacion(guion, medios, creadores, bancos)
+    caption = texto_publicacion(guion, medios, creadores, bancos, aviso)
     sin_fondo = sum(1 for sg in segmentos[:-1]
                     if not (sg.get("fondo") or sg.get("foto") or sg.get("fotos") or sg.get("video_real")))
     reales = sum(1 for sg in segmentos[:-1] if sg.get("foto") or sg.get("fotos") or sg.get("video_real"))
@@ -1751,7 +1944,7 @@ def main():
     if not respuesta:
         avisar("🗑 Reel descartado.")
         return
-    preparar_sitio([reel, portada], caption, [guion["gancho"]])
+    preparar_sitio([reel, portada], caption, [guion["gancho"]], indice_cat)
     print("Aprobado. El workflow sigue con la publicacion.")
 
 
@@ -1768,6 +1961,8 @@ def publicar():
     if os.path.exists(HISTORIAL):
         with open(HISTORIAL, encoding="utf-8") as f:
             historial = json.load(f)
+    if p.get("indice_categoria") is not None:
+        guardar_categoria(p["indice_categoria"])            # la proxima de interes general sera otra categoria
     guardar_historial((historial + p["titulos"])[-40:])
     avisar(f"✅ Reel publicado en @{usuario}\n{link}" +
            ("\n📲 Historia publicada" if historia_ok else "\n⚠️ La historia no se pudo publicar"))
