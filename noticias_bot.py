@@ -49,7 +49,11 @@ VOZ = VOCES[0]
 VELOCIDAD_VOZ = "+15%"
 VOLUMEN_MUSICA = 0.25                     # volumen de la musica (baja sola cuando habla la voz)
 CARPETA_MUSICA = "musica"                 # Pone ahi archivos .mp3 libres de derechos
-HASHTAGS_FIJOS = ["#QLQ", "#QueloQueViral", "#noticias", "#viral", "#noticiasdehoy"]
+# Instagram permite como maximo 5 hashtags por publicacion (desde dic. 2025): 1 de la marca + 4 del tema
+HASHTAG_MARCA = "#QueloQueViral"
+HASHTAGS_GENERICOS = {"#viral", "#noticias", "#fyp", "#foryou", "#parati", "#reels", "#explore", "#explorar",
+                      "#trending", "#tendencia", "#noticiasdehoy", "#news", "#reel", "#instagram", "#qlq",
+                      "#queloqueviral"}
 
 # Colores (formato RGB)
 FONDO = (14, 17, 28)
@@ -552,7 +556,13 @@ Responde SOLO con JSON valido:
 "ilustraciones": ["...", "...", "..."],
 "tono": "alegre o seria",
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
-"hashtags": ["#hasta", "#seis", "#hashtags"]}}
+"hashtags": ["#...", "#...", "#...", "#..."]}}
+
+HASHTAGS: exactamente 4, ESPECIFICOS de este contenido, sin tildes ni espacios. Uno del protagonista o lugar
+(ej: #DaniilMedvedev, #Melbourne), uno del tema concreto (ej: #Tenis, #AbiertoDeAustralia), uno de la
+disciplina o categoria amplia en espanol (ej: #Deportes, #Ciencia, #Astronomia, #Nutricion, #Estoicismo) y uno
+que la gente busque sobre ese tema (ej: #DatosCuriosos, #SaludMental). PROHIBIDOS los genericos como #viral,
+#noticias, #fyp, #parati, #reels, #explore, #trending.
 
 NOTAS DE LOS MEDIOS:
 {material or "sin notas: usa solo conocimiento ampliamente documentado"}""", 2500)
@@ -1501,9 +1511,19 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     return total, bool(voces), bool(temas)
 
 
+def hashtags_finales(propuestos):
+    """1 hashtag de la marca + hasta 4 especificos del tema (el maximo de Instagram es 5)."""
+    limpios = []
+    for h in propuestos or []:
+        h = "".join(c for c in unicodedata.normalize("NFD", h) if unicodedata.category(c) != "Mn")
+        h = "#" + re.sub(r"[^A-Za-z0-9ñÑ]", "", h.replace("#", ""))
+        if len(h) > 2 and h.lower() not in HASHTAGS_GENERICOS and h.lower() not in [x.lower() for x in limpios]:
+            limpios.append(h)
+    return [HASHTAG_MARCA] + limpios[:4]
+
+
 def texto_publicacion(g, medios, creadores, bancos, aviso=""):
-    etiquetas = list(dict.fromkeys(HASHTAGS_FIJOS + [h if h.startswith("#") else "#" + h
-                                                      for h in g.get("hashtags", [])]))[:12]
+    etiquetas = hashtags_finales(g.get("hashtags", []))
     lineas = [f"🔥 {g['gancho']}", "", g["descripcion"], ""]
     if g.get("pregunta"):
         lineas += [f"💬 {g['pregunta']} Cuéntanos en los comentarios 👇", ""]
@@ -1655,29 +1675,43 @@ def publicar_en_instagram(url_reel, url_portada, caption):
 
 
 def subir_a_youtube(ruta_video, titulo, descripcion):
-    """Sube el Reel como Short a YouTube. Devuelve el link o lanza un error."""
+    """Sube el Reel como Short a YouTube. Devuelve el link o lanza un error.
+    Si YouTube rechaza los datos (por ejemplo error 409), reintenta con datos minimos."""
     tok = requests.post("https://oauth2.googleapis.com/token", timeout=30, data={
         "client_id": YT_CLIENT_ID, "client_secret": YT_CLIENT_SECRET,
         "refresh_token": YT_REFRESH_TOKEN, "grant_type": "refresh_token"}).json()
     if "access_token" not in tok:
         raise RuntimeError(f"YouTube no dio acceso: {tok.get('error_description') or tok}")
     cab = {"Authorization": f"Bearer {tok['access_token']}"}
-    titulo = (titulo[:90] + " #Shorts").replace("<", "").replace(">", "")
-    meta = {"snippet": {"title": titulo, "description": descripcion[:4900].replace("<", "").replace(">", ""),
-                        "categoryId": "25", "defaultLanguage": "es", "tags": ["noticias", "viral", "QLQ"]},
-            "status": {"privacyStatus": YT_PRIVACIDAD, "selfDeclaredMadeForKids": False}}
+    limpio = lambda t: t.replace("<", "").replace(">", "")
+    titulo_base = limpio(titulo[:88])
+    etiquetas = list(dict.fromkeys(t.lstrip("#") for t in re.findall(r"#\w+", descripcion)))[:8]
+    intentos = [
+        {"snippet": {"title": f"{titulo_base} #Shorts", "description": limpio(descripcion[:4900]),
+                     "categoryId": "25", "tags": etiquetas or ["QueloQueViral"]},
+         "status": {"privacyStatus": YT_PRIVACIDAD, "selfDeclaredMadeForKids": False}},
+        {"snippet": {"title": f"{titulo_base} | QLQ #Shorts", "description": limpio(descripcion[:4900]),
+                     "categoryId": "25"},
+         "status": {"privacyStatus": YT_PRIVACIDAD, "selfDeclaredMadeForKids": False}},
+    ]
     tam = os.path.getsize(ruta_video)
-    ini = requests.post("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-                        timeout=60, json=meta, headers={**cab, "X-Upload-Content-Type": "video/mp4",
-                                                        "X-Upload-Content-Length": str(tam)})
-    if ini.status_code != 200 or "Location" not in ini.headers:
-        raise RuntimeError(f"YouTube rechazo la subida: {ini.text[:300]}")
-    with open(ruta_video, "rb") as f:
-        r = requests.put(ini.headers["Location"], data=f, timeout=600,
-                         headers={**cab, "Content-Type": "video/mp4", "Content-Length": str(tam)})
-    if r.status_code not in (200, 201):
-        raise RuntimeError(f"YouTube fallo al subir: {r.text[:300]}")
-    return f"https://youtube.com/shorts/{r.json()['id']}"
+    ultimo_error = ""
+    for meta in intentos:
+        ini = requests.post("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+                            timeout=60, json=meta, headers={**cab, "X-Upload-Content-Type": "video/mp4",
+                                                            "X-Upload-Content-Length": str(tam)})
+        if ini.status_code != 200 or "Location" not in ini.headers:
+            ultimo_error = f"YouTube rechazo la subida ({ini.status_code}): {ini.text[:200]}"
+            print(ultimo_error + " — reintento con datos minimos.")
+            continue
+        with open(ruta_video, "rb") as f:
+            r = requests.put(ini.headers["Location"], data=f, timeout=600,
+                             headers={**cab, "Content-Type": "video/mp4", "Content-Length": str(tam)})
+        if r.status_code in (200, 201):
+            return f"https://youtube.com/shorts/{r.json()['id']}"
+        ultimo_error = f"YouTube fallo al subir ({r.status_code}): {r.text[:200]}"
+        print(ultimo_error + " — reintento.")
+    raise RuntimeError(ultimo_error)
 
 
 # ======================== PAGINAS WEB (las pide TikTok) ========================
