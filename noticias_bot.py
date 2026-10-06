@@ -119,6 +119,8 @@ PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").strip()
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").strip()
+INTENTO = {"n": 0}
+DESCARTADOS = []                                  # temas descartados en esta corrida (para no repetirlos)
 MIN_FONDOS = 3                             # partes con imagen minimas para mandar el Reel a aprobar
 MAX_ILUSTRACIONES_IA = 5                   # por Reel (la cuota gratis de Cloudflare es diaria)
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
@@ -888,6 +890,7 @@ def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
 MAX_VERIFICACIONES = 6      # imagenes que se le muestran a la IA por cada parte del Reel
 DIAG = {"candidatas": 0, "aceptadas": 0, "rechazadas": 0, "stock_aceptados": 0, "stock_rechazados": 0,
         "stock_encontrados": 0, "stock_descarga_fallida": 0, "ia_generadas": 0, "ia_fallidas": 0,
+        "stock_busquedas": 0, "stock_resultados": 0, "ia_ideas": 0, "ia_error": "",
         "fuentes_con_error": set()}
 
 
@@ -1100,6 +1103,7 @@ def generar_ilustracion(descripcion, carpeta, contexto=""):
             if not imagen:
                 print(f"Cloudflare no devolvio imagen: {str(js.get('errors') or js)[:200]}")
                 DIAG["ia_fallidas"] += 1
+                DIAG["ia_error"] = str(js.get("errors") or js)[:120]
                 continue
             IA_USADAS["cantidad"] += 1
             DIAG["ia_generadas"] += 1
@@ -1117,6 +1121,8 @@ def generar_ilustracion(descripcion, carpeta, contexto=""):
         except Exception as e:
             print(f"No se pudo generar la ilustracion: {e}")
             DIAG["fuentes_con_error"].add("Cloudflare IA")
+            DIAG["ia_fallidas"] += 1
+            DIAG["ia_error"] = str(e)[:120]
             return None, None
     return None, None
 
@@ -1202,10 +1208,17 @@ def buscar_video(busqueda, carpeta, usados, contexto=""):
         return None, None
     if PIXABAY_API_KEY:
         try:
-            r = requests.get("https://pixabay.com/api/videos/", timeout=20, params={
-                "key": PIXABAY_API_KEY, "q": busqueda[:100], "safesearch": "true",
-                "per_page": 20, "video_type": "film"}).json()
-            for v in r.get("hits", []):
+            hits = []
+            consultas = [busqueda] + ([busqueda.split()[-1]] if len(busqueda.split()) > 1 else [])
+            for consulta in consultas:                     # si no hay nada, prueba algo mas simple
+                r = requests.get("https://pixabay.com/api/videos/", timeout=20, params={
+                    "key": PIXABAY_API_KEY, "q": consulta[:100], "safesearch": "true", "per_page": 20}).json()
+                DIAG["stock_busquedas"] += 1
+                hits = r.get("hits", [])
+                DIAG["stock_resultados"] += len(hits)
+                if hits:
+                    break
+            for v in hits:
                 clave = f"pb{v['id']}"
                 if clave in usados or v.get("duration", 0) < 4 or not video_apto(v.get("tags"), busqueda):
                     continue
@@ -1837,7 +1850,7 @@ def main():
         indice_cat, categoria = proxima_categoria()
         items, fallidas = juntar_interes(categoria)
         print(f"Interes general: {categoria}. {len(items)} articulos. Fuentes con problemas: {fallidas or 'ninguna'}")
-        for tema in elegir_tema_interes(categoria, items, "; ".join(historial[-30:])):
+        for tema in elegir_tema_interes(categoria, items, "; ".join(historial[-30:] + DESCARTADOS)):
             ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(items)]
             notas, fuentes = [], []
             for i in ids[:3]:
@@ -1869,7 +1882,7 @@ def main():
 
         # Elige el tema y lee las notas completas (si el primero no se puede leer, prueba el siguiente)
         guion = None
-        for tema in elegir_temas(noticias, tendencias, "; ".join(historial[-20:])):
+        for tema in elegir_temas(noticias, tendencias, "; ".join(historial[-20:] + DESCARTADOS)):
             ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(noticias)]
             notas, fuentes = [], []
             for i in sorted(ids, key=lambda i: not es_directo(noticias[i])):
@@ -1941,6 +1954,9 @@ def main():
         return None
 
     ideas_ia = [x for x in (guion.get("ilustraciones") or []) if isinstance(x, str) and x.strip()]
+    if len(ideas_ia) < 3:                               # respaldo: escenas a partir de las palabras clave
+        ideas_ia += [f"{c}, atmospheric scene, wide shot" for c in claves_en if c][:3 - len(ideas_ia)]
+    DIAG["ia_ideas"] = len(ideas_ia)
 
     ideas_usadas = set()
 
@@ -2013,7 +2029,19 @@ def main():
                   else f"IA: {DIAG['ia_generadas']} generadas, {DIAG['ia_fallidas']} fallidas")
         avisar(f"⚠️ Descarté el Reel sobre «{guion['gancho']}»: solo {len(con_fondo)} de {len(segmentos) - 1} partes "
                f"con imagen. Fotos: {DIAG['aceptadas']} aceptadas de {DIAG['candidatas']}; videos de stock: "
-               f"{DIAG['stock_encontrados']} encontrados, {DIAG['stock_descarga_fallida']} sin poder bajar; {ia_txt}.")
+               f"{DIAG['stock_busquedas']} búsquedas, {DIAG['stock_resultados']} resultados, "
+               f"{DIAG['stock_encontrados']} aptos, {DIAG['stock_descarga_fallida']} sin poder bajar; "
+               f"{ia_txt}, {DIAG['ia_ideas']} ideas" + (f" (error: {DIAG['ia_error']})" if DIAG["ia_error"] else "")
+               + (f"; sin respuesta: {', '.join(sorted(DIAG['fuentes_con_error']))}" if DIAG["fuentes_con_error"] else "")
+               + ".")
+        if INTENTO["n"] < 2:                             # prueba con otro tema
+            INTENTO["n"] += 1
+            DESCARTADOS.append(guion["gancho"])
+            for k in DIAG:
+                DIAG[k] = set() if isinstance(DIAG[k], set) else ("" if isinstance(DIAG[k], str) else 0)
+            IA_USADAS["cantidad"] = 0
+            avisar("🔁 Pruebo con otro tema...")
+            return main()
         return
 
     textos_voz = [guion.get("voz_gancho") or guion["gancho"]] + [p["voz"] for p in guion["placas"][:3]]
