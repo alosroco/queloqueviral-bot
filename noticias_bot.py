@@ -90,6 +90,9 @@ IG_TOKEN = os.environ.get("IG_TOKEN", "").strip()
 IG_TOKEN_SECRETO = IG_TOKEN
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
+CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").strip()
+CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").strip()
+MAX_ILUSTRACIONES_IA = 3                   # por Reel (la cuota gratis de Cloudflare es diaria)
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 YT_CLIENT_ID = os.environ.get("YT_CLIENT_ID", "")
 YT_CLIENT_SECRET = os.environ.get("YT_CLIENT_SECRET", "")
@@ -411,6 +414,16 @@ ESTRUCTURA:
   o ["Daniil Medvedev", "Abierto de Australia", "Tenis"]). La primera debe ser el protagonista principal.
   "palabras_clave_en": las mismas 3 en ingles y genericas para buscar video de stock
   (ej: ["brazil politics", "courthouse", "brasilia city"] o ["tennis player", "tennis court", "tennis match"]).
+- ILUSTRACIONES: "ilustraciones": 3 descripciones EN INGLES, MUY ESPECIFICAS, que nos SITUEN en la noticia:
+  1) el LUGAR: describe visualmente el sitio real donde ocurre (tipo de estadio, superficie, colores,
+     arquitectura, ciudad, clima, hora), ej: "a huge night tennis stadium with a blue hard court, packed
+     stands and bright floodlights, Melbourne summer".
+  2) el MOMENTO: la escena clave de la noticia con personas ANONIMAS vistas de espaldas, de lejos o en
+     silueta, SIN que se vea la cara, ej: "a tennis player seen from behind smashing his racket on the
+     court, umpire chair in the background, tense atmosphere".
+  3) un DETALLE o simbolo del tema, ej: "a broken tennis racket lying on a blue hard court".
+  PROHIBIDO: caras visibles, personas reconocibles, nombres, textos, letras, logos, marcas, escudos, banderas
+  o camisetas de equipos reales. Describe los lugares con palabras visuales, no con su nombre comercial.
 - Si alguna informacion viene de un video de YouTube, nombra al canal como fuente en "pantalla" o "voz".
 
 Responde SOLO con JSON valido:
@@ -419,6 +432,7 @@ Responde SOLO con JSON valido:
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "...", "imagen": "..."}}, (3 placas en total)],
 "pregunta": "...",
 "palabras_clave": ["...", "...", "..."], "palabras_clave_en": ["...", "...", "..."],
+"ilustraciones": ["...", "...", "..."],
 "tono": "alegre o seria",
 "descripcion": "texto para la publicacion de Instagram: 3 parrafos cortos que cuentan la noticia",
 "hashtags": ["#hasta", "#seis", "#hashtags"]}}
@@ -675,8 +689,10 @@ def _titulo_relacionado(titulo, claves):
     return distintiva in t
 
 
-def verificar_imagen(ruta_imagen, nombre, contexto):
-    """Le muestra la imagen a la IA y pregunta si corresponde a la noticia. Devuelve True o False."""
+def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
+    """Le muestra la imagen a la IA y pregunta si corresponde a la noticia. Devuelve True o False.
+    estricto=True (fotos del protagonista): tiene que mostrarlo a el o algo directamente relacionado.
+    estricto=False (video de stock): alcanza con que la escena sea coherente con el tema."""
     try:
         img = Image.open(ruta_imagen).convert("RGB")
         img.thumbnail((512, 512))
@@ -692,7 +708,12 @@ def verificar_imagen(ruta_imagen, nombre, contexto):
                     f"Noticia: {contexto}\nProtagonista buscado: {nombre}\n"
                     "¿Esta imagen muestra al protagonista buscado, o un lugar u objeto directamente relacionado "
                     "con esta noticia? Responde NO si muestra a otra persona, un tema distinto (por ejemplo otro "
-                    "deporte o evento), un grafico, mapa, texto o logo. Responde solo SI o NO.")}]}]})
+                    "deporte o evento), un grafico, mapa, texto o logo. Responde solo SI o NO.") if estricto else (
+                    f"Noticia: {contexto}\nEscena buscada: {nombre}\n"
+                    "Esta es una imagen ilustrativa de fondo para un video sobre la noticia. ¿La escena es coherente "
+                    "con el tema (mismo deporte, mismo tipo de lugar o situacion)? NO hace falta que aparezca la "
+                    "persona de la noticia. Responde NO solo si es de otro tema, tiene banderas, textos o logos "
+                    "visibles, o es inapropiada. Responde solo SI o NO.")}]}]})
         r.raise_for_status()
         respuesta = "".join(b.get("text", "") for b in r.json()["content"]).strip().upper()
         return respuesta.startswith("SI") or respuesta.startswith("SÍ")
@@ -701,7 +722,9 @@ def verificar_imagen(ruta_imagen, nombre, contexto):
         return False
 
 
-MAX_VERIFICACIONES = 4      # imagenes que se le muestran a la IA por cada parte del Reel
+MAX_VERIFICACIONES = 6      # imagenes que se le muestran a la IA por cada parte del Reel
+DIAG = {"candidatas": 0, "aceptadas": 0, "rechazadas": 0, "stock_aceptados": 0, "stock_rechazados": 0,
+        "fuentes_con_error": set()}
 
 
 def _candidatos_openverse(nombre, claves):
@@ -713,6 +736,7 @@ def _candidatos_openverse(nombre, claves):
             "mature": "false"}).json()
     except Exception as e:
         print(f"Openverse no respondio para '{nombre}': {e}")
+        DIAG["fuentes_con_error"].add("Openverse")
         return []
     fotos = []
     for it in r.get("results", []):
@@ -737,6 +761,7 @@ def _candidatos_pixabay_fotos(nombre):
             "per_page": 15}).json()
     except Exception as e:
         print(f"Pixabay (fotos) no respondio para '{nombre}': {e}")
+        DIAG["fuentes_con_error"].add("Pixabay")
         return []
     return [{"url": h.get("largeImageURL"), "titulo": f"pbf:{h.get('id')}",
              "credito": f"Pixabay ({h.get('user', '')})"}
@@ -761,6 +786,7 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
             candidatos += [c for c in encontrados if _titulo_relacionado(c["titulo"], claves)]
         except Exception as e:
             print(f"Commons no respondio para '{busqueda}': {e}")
+            DIAG["fuentes_con_error"].add("Wikimedia")
     candidatos += _candidatos_openverse(nombre, claves)
     candidatos += _candidatos_pixabay_fotos(nombre)
     # sin repetidos, mezclando un poco para que no salgan siempre las mismas
@@ -773,6 +799,7 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
         resto = unicos[1:]
         random.shuffle(resto)
         unicos = unicos[:1] + resto
+    DIAG["candidatas"] += len(unicos)
     verificadas = 0
     for c in unicos:
         if c["titulo"] in usados or verificadas >= MAX_VERIFICACIONES:
@@ -787,8 +814,10 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
                 f.write(r.content)
             verificadas += 1
             if not verificar_imagen(original, nombre, contexto):
+                DIAG["rechazadas"] += 1
                 print(f"Descartada por no corresponder a la noticia: {c['titulo']}")
                 continue
+            DIAG["aceptadas"] += 1
             ruta = os.path.join(carpeta, f"foto{len(usados)}.jpg")
             componer_foto(original, ruta)
             return ruta, c["credito"]
@@ -830,6 +859,61 @@ def buscar_video_real(nombre, carpeta, usados, contexto=""):
                 print(f"Video descartado por no corresponder a la noticia: {c['titulo']}")
         except Exception as e:
             print(f"No se pudo usar el video {c['titulo']}: {e}")
+    return None, None
+
+
+ESTILO_IA = (", cinematic digital illustration, painterly editorial art style, dramatic lighting, rich detail, "
+             "depth and atmosphere, vertical composition, faces not visible, people seen from behind or in "
+             "silhouette, no text, no letters, no words, no numbers, no logos, no brands, no flags, no watermark")
+IA_USADAS = {"cantidad": 0}
+
+
+def marcar_ilustracion(ruta):
+    """Sello visible 'ILUSTRACIÓN IA' en la esquina de la imagen: transparencia con el publico."""
+    img = Image.open(ruta).convert("RGB")
+    d = ImageDraw.Draw(img)
+    f = fuente(True, 26)
+    texto = "  ILUSTRACIÓN IA  "
+    w = f.getlength(texto)
+    x, y = ANCHO - 40 - 20 - w, ARRIBA + 110
+    d.rounded_rectangle([x, y, x + w, y + 44], radius=10, fill=(10, 12, 20))
+    d.text((x, y + 7), texto, font=f, fill=ACENTO)
+    img.save(ruta, "JPEG", quality=92)
+
+
+def generar_ilustracion(descripcion, carpeta, contexto=""):
+    """Genera una ilustracion con IA (Cloudflare Workers AI, modelo FLUX, cuota gratis diaria).
+    Solo escenas conceptuales, estilo ilustracion (que no se confunda con una foto real).
+    Devuelve (ruta_compuesta, credito) o (None, None)."""
+    if not (CF_ACCOUNT_ID and CF_API_TOKEN and descripcion) or IA_USADAS["cantidad"] >= MAX_ILUSTRACIONES_IA:
+        return None, None
+    url = (f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}"
+           "/ai/run/@cf/black-forest-labs/flux-1-schnell")
+    prompt = (descripcion.strip()[:600] + ESTILO_IA)[:2000]
+    for cuerpo in ({"prompt": prompt, "steps": 6}, {"prompt": prompt, "num_steps": 6}):
+        try:
+            r = requests.post(url, headers={"Authorization": f"Bearer {CF_API_TOKEN}"}, json=cuerpo, timeout=90)
+            js = r.json()
+            imagen = (js.get("result") or {}).get("image")
+            if not imagen:
+                print(f"Cloudflare no devolvio imagen: {str(js.get('errors') or js)[:200]}")
+                continue
+            IA_USADAS["cantidad"] += 1
+            original = os.path.join(carpeta, f"ia{IA_USADAS['cantidad']}.jpg")
+            with open(original, "wb") as f:
+                f.write(base64.b64decode(imagen))
+            # Control: que no tenga textos raros ni algo fuera de tema
+            if contexto and not verificar_imagen(original, descripcion, contexto, estricto=False):
+                print("Ilustracion descartada por el control de la IA.")
+                return None, None
+            ruta = original.replace(".jpg", "_v.jpg")
+            componer_foto(original, ruta)
+            marcar_ilustracion(ruta)
+            return ruta, "Ilustración generada con IA"
+        except Exception as e:
+            print(f"No se pudo generar la ilustracion: {e}")
+            DIAG["fuentes_con_error"].add("Cloudflare IA")
+            return None, None
     return None, None
 
 
@@ -897,13 +981,15 @@ def _bajar_video(url, carpeta, usados, clave):
 
 
 def _verificar_video(ruta, nombre, contexto):
-    """Revisa un cuadro del video con la IA."""
+    """Revisa un cuadro del video de stock con la IA (criterio de escena coherente con el tema)."""
     if not contexto:
         return True
     cuadro = ruta + ".jpg"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", "1", "-i", ruta, "-frames:v", "1", cuadro],
                    check=False)
-    return os.path.exists(cuadro) and verificar_imagen(cuadro, nombre, contexto)
+    ok = os.path.exists(cuadro) and verificar_imagen(cuadro, nombre, contexto, estricto=False)
+    DIAG["stock_aceptados" if ok else "stock_rechazados"] += 1
+    return ok
 
 
 def buscar_video(busqueda, carpeta, usados, contexto=""):
@@ -935,6 +1021,7 @@ def buscar_video(busqueda, carpeta, usados, contexto=""):
                     break
         except Exception as e:
             print(f"Pixabay no respondio para '{busqueda}': {e}")
+            DIAG["fuentes_con_error"].add("Pixabay videos")
     if PEXELS_API_KEY:
         try:
             r = requests.get("https://api.pexels.com/videos/search", timeout=20,
@@ -1158,7 +1245,11 @@ def texto_publicacion(g, medios, creadores, bancos):
     if creadores:
         lineas.append(f"🎥 Video viral: {', '.join(creadores)}")
     if bancos:
-        lineas.append(f"🎞 Imágenes: {', '.join(bancos)}")
+        reales_b = [x for x in bancos if "IA" not in x]
+        if reales_b:
+            lineas.append(f"🎞 Imágenes: {', '.join(reales_b)}")
+        if len(reales_b) < len(bancos):
+            lineas.append("🎨 Incluye recreaciones ilustrativas generadas con IA (no son fotos reales del hecho).")
     lineas += ["Resumen elaborado a partir de lo publicado por los medios citados.", "",
                f"Síguenos en {NOMBRE_CUENTA} para enterarte de lo más viral del mundo.",
                f"🟡 {FIRMA} | QueloQue Viral", "", " ".join(etiquetas)]
@@ -1554,6 +1645,17 @@ def main():
                 return {"fondo": ruta}
         return None
 
+    ideas_ia = [x for x in (guion.get("ilustraciones") or []) if isinstance(x, str) and x.strip()]
+
+    def _ilustracion(indice):
+        if not ideas_ia:
+            return None
+        ruta, credito = generar_ilustracion(ideas_ia[indice % len(ideas_ia)], carpeta, contexto)
+        if ruta:
+            _registrar(credito)
+            return {"foto": ruta}
+        return None
+
     def fondo(indice):
         """Gancho: imagen real del protagonista (para reconocerlo al instante).
         Desarrollo: PRIMERO VIDEO (real o de stock relacionado) para que el Reel tenga movimiento;
@@ -1573,11 +1675,15 @@ def main():
                     break
         if not media:                                     # 2b) desarrollo: video de stock del tema
             media = _video_stock(indice)
-        if not media:                                     # 3) si no hay video, foto
+        if not media and indice > 0:                      # 3) ilustracion con IA (variedad en vez de repetir)
+            media = _ilustracion(indice)
+        if not media:                                     # 4) foto del tema
             for clave in orden:
                 media = _foto(clave, orden)
                 if media:
                     break
+        if not media and indice == 0:                     # 5) gancho sin foto: ilustracion
+            media = _ilustracion(indice)
         if media:
             aprobados.append(media)
             return media
@@ -1627,6 +1733,12 @@ def main():
     if sin_fondo:
         nota.append(f"{sin_fondo} partes sin video de fondo (no se encontro video o falta la clave de Pixabay)")
     nota.append(f"{reales} de {len(segmentos) - 1} partes con imágenes reales del protagonista")
+    distintos = len({str(sorted((k, str(v)) for k, v in sg.items() if k in ("foto", "fotos", "fondo", "video_real")))
+                     for sg in segmentos[:-1]})
+    nota.append(f"{distintos} fondos distintos | fotos: {DIAG['candidatas']} encontradas, "
+                f"{DIAG['aceptadas']} aceptadas, {DIAG['rechazadas']} rechazadas | videos de stock: "
+                f"{DIAG['stock_aceptados']} aceptados, {DIAG['stock_rechazados']} rechazados"
+                + (f" | sin respuesta: {', '.join(sorted(DIAG['fuentes_con_error']))}" if DIAG["fuentes_con_error"] else ""))
     mandar_borrador(reel, caption, id_corrida, modo_prueba,
                     f"ℹ️ Reel de {total:.0f} segundos" + (" — " + "; ".join(nota) if nota else ""))
     if modo_prueba:
