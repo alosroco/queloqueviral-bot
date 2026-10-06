@@ -2,9 +2,10 @@ name: QueloQue Viral
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # 9:00 Argentina / 6:00 Mexico
-    - cron: "0 17 * * *"   # 14:00 Argentina / 11:00 Mexico
-    - cron: "0 23 * * *"   # 20:00 Argentina / 17:00 Mexico
+    - cron: "0 12 * * *"   # 09:00 Argentina - interes general
+    - cron: "0 16 * * *"   # 13:00 Argentina - noticia del dia
+    - cron: "0 21 * * *"   # 18:00 Argentina - interes general
+    - cron: "0 0 * * *"    # 21:00 Argentina - noticia del dia
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
@@ -12,6 +13,11 @@ on:
         default: "normal"
         type: choice
         options: [normal, prueba, web, tiktok_link, tiktok_token]
+      contenido:
+        description: "Que tipo de Reel armar (auto = segun el horario)"
+        default: "auto"
+        type: choice
+        options: [auto, noticias, interes]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -49,6 +55,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
+      CONTENIDO: ${{ github.event_name == 'schedule' && ((github.event.schedule == '0 12 * * *' || github.event.schedule == '0 21 * * *') && 'interes' || 'noticias') || github.event.inputs.contenido }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
