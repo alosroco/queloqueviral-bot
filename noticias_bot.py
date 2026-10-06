@@ -415,7 +415,7 @@ ESTRUCTURA:
 
 Responde SOLO con JSON valido:
 {{"categoria": "UNA PALABRA EN MAYUSCULAS",
-"gancho": "...", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...", "imagen_gancho": "...",
+"gancho": "...", "destacado": "1 a 3 palabras del gancho para resaltar en amarillo", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...", "imagen_gancho": "...",
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "...", "imagen": "..."}}, (3 placas en total)],
 "pregunta": "...",
 "palabras_clave": ["...", "...", "..."], "palabras_clave_en": ["...", "...", "..."],
@@ -466,23 +466,40 @@ def capa_nueva():
     return img, d
 
 
-def texto_con_sombra(d, texto, font, color, y, interlineado=1.3):
+def _limpia(p):
+    return re.sub(r"[^\wáéíóúñü]", "", p.lower())
+
+
+def dibujar_palabras(d, texto, font, y, n=None, color=TEXTO, destacados=(), sombra=True, interlineado=1.3):
+    """Dibuja el texto respetando su diagramacion final, pero mostrando solo las primeras n palabras.
+    Asi las palabras aparecen de a una sin que el texto 'salte'. Devuelve la y final."""
+    resaltar = {_limpia(x) for x in destacados if _limpia(x)}
+    contador = 0
     for linea in partir(texto, font, ANCHO - 2 * MARGEN):
-        d.text((MARGEN, y), linea, font=font, fill=color, stroke_width=3, stroke_fill=(0, 0, 0, 230))
+        x = MARGEN
+        for palabra in linea.split():
+            if n is None or contador < n:
+                col = ACENTO if _limpia(palabra) in resaltar else color
+                extra = {"stroke_width": 3, "stroke_fill": (0, 0, 0, 230)} if sombra else {}
+                d.text((x, y), palabra, font=font, fill=col, **extra)
+            x += font.getlength(palabra + " ")
+            contador += 1
         y += int(font.size * interlineado)
     return y
 
 
-def titulo_en_recuadro(d, texto, font, y_base):
-    """Dibuja el titulo dentro del recuadro oscuro. y_base = donde termina el recuadro."""
+def texto_con_sombra(d, texto, font, color, y, interlineado=1.3, n=None):
+    return dibujar_palabras(d, texto, font, y, n=n, color=color, interlineado=interlineado)
+
+
+def titulo_en_recuadro(d, texto, font, y_base, n=None, destacados=()):
+    """Titulo dentro del recuadro oscuro (el recuadro siempre del tamano final). y_base = donde termina."""
     lineas = partir(texto, font, ANCHO - 2 * MARGEN)
-    alto = len(lineas) * int(font.size * 1.18)
+    alto = len(lineas) * int(font.size * 1.15)
     y0 = y_base - alto - 40
-    d.rounded_rectangle([MARGEN - 36, y0 - 60, ANCHO - MARGEN + 36, y_base + 10], radius=34, fill=(10, 12, 20, 210))
+    d.rounded_rectangle([MARGEN - 36, y0 - 60, ANCHO - MARGEN + 36, y_base + 10], radius=34, fill=(10, 12, 20, 215))
     d.rectangle([MARGEN, y0 - 28, MARGEN + 110, y0 - 20], fill=ACENTO)
-    for linea in lineas:
-        d.text((MARGEN, y0), linea, font=font, fill=TEXTO)
-        y0 += int(font.size * 1.18)
+    dibujar_palabras(d, texto, font, y0, n=n, destacados=destacados, sombra=False, interlineado=1.15)
 
 
 def etiqueta(d, texto, y):
@@ -522,22 +539,39 @@ def logo_completo(d, cx, cy, r):
     d.text((cx - w2 / 2, cy - r * 0.16), "VIRAL", font=f2, fill=ACENTO)
 
 
-def capa_gancho(g, ruta):
+def tamano_titulo(texto, maximo=124, minimo=80):
+    """El tamano mas grande posible: idealmente en 3 lineas; si no entra, en 4 con letra mas chica."""
+    for max_lineas in (3, 4):
+        for tam in range(maximo, minimo - 1, -4):
+            if len(partir(texto, fuente(True, tam), ANCHO - 2 * MARGEN)) <= max_lineas:
+                return tam
+    return minimo
+
+
+def palabras_de(texto):
+    return len(texto.split())
+
+
+def capa_gancho(g, ruta, n=None):
+    """Portada del Reel: titulo GRANDE, con palabras clave resaltadas en amarillo."""
     img, d = capa_nueva()
     etiqueta(d, g["categoria"], ARRIBA)
-    titulo_en_recuadro(d, g["gancho"], fuente(True, 84), 1180)
-    texto_con_sombra(d, "Te lo contamos en 30 segundos", fuente(False, 42), TEXTO, 1250)
+    destacados = (g.get("destacado") or "").split()
+    # El titulo va abajo para no tapar la cara de la foto, que esta arriba
+    titulo_en_recuadro(d, g["gancho"], fuente(True, tamano_titulo(g["gancho"])), 1395, n=n, destacados=destacados)
+    texto_con_sombra(d, "Te lo contamos en 30 segundos", fuente(False, 38), TEXTO, 1422)
     insignia(d, ANCHO - MARGEN - 50, ARRIBA + 29, 50)
-    firma(d)
+    d.text((MARGEN, ABAJO + 20), NOMBRE_CUENTA, font=fuente(True, 34), fill=ACENTO,
+           stroke_width=2, stroke_fill=(0, 0, 0, 200))
     img.save(ruta)
 
 
-def capa_desarrollo(p, numero, total, categoria, ruta):
+def capa_desarrollo(p, numero, total, categoria, ruta, n=None):
     img, d = capa_nueva()
     etiqueta(d, categoria, ARRIBA)
     puntos(d, numero, total)
     titulo_en_recuadro(d, p.get("titulo") or "", fuente(True, 66), 1000)
-    texto_con_sombra(d, p["pantalla"], fuente(True, 50), TEXTO, 1080)
+    texto_con_sombra(d, p["pantalla"], fuente(True, 54), TEXTO, 1080, n=n)
     firma(d)
     img.save(ruta)
 
@@ -1023,29 +1057,53 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
                     f"zoompan=z='min(zoom+0.0004,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
                     f"d={cuadros}:s={ANCHO}x{ALTO}:fps={fps},setsar=1[f]")
         elif seg.get("fondo"):
-            entrada = ["-stream_loop", "-1", "-i", seg["fondo"]]
+            inicio = 0.0
+            try:
+                largo = duracion(seg["fondo"])
+                if largo > dur + 2:
+                    inicio = random.uniform(0, largo - dur - 1)
+            except Exception:
+                pass
+            entrada = ["-ss", f"{inicio:.2f}", "-stream_loop", "-1", "-i", seg["fondo"]]
             base = (f"[0:v]scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,crop={ANCHO}:{ALTO},"
                     f"fps={fps},setsar=1,eq=brightness=-0.10:saturation=0.95[f]")
         else:
             entrada = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
             base = "[0:v]setsar=1[f]"
         # El primer fotograma del video NO puede ser negro: es la miniatura en el feed
-        entrada_fade = "" if i == 0 else "fade=t=in:st=0:d=0.25,"
-        fin = (f"[f][1:v]overlay=0:0,{entrada_fade}"
-               f"fade=t=out:st={dur - 0.25:.2f}:d=0.25,format=yuv420p")
+        entrada_fade = "" if i == 0 else "fade=t=in:st=0:d=0.15,"
+        # Capa de texto: fija, o animada palabra por palabra al ritmo de la voz
+        capa_in = ["-i", seg["capa"]]
+        if seg.get("render") and seg.get("n_palabras"):
+            n_pal = seg["n_palabras"]
+            habla = (dur - 0.5) if voces else dur * 0.8
+            ventana = min(habla * seg.get("ritmo", 0.9), habla)      # tiempo en el que aparecen las palabras
+            paso = max(ventana / n_pal, 0.06)
+            lista_c = os.path.join(tmp, f"capas{i}.txt")
+            with open(lista_c, "w") as fl:
+                for k in range(1, n_pal + 1):
+                    png = os.path.join(tmp, f"capa{i}_{k}.png")
+                    seg["render"](k, png)
+                    fl.write(f"file '{png}'\nduration {paso if k < n_pal else max(dur - paso * (n_pal - 1), 0.1):.3f}\n")
+                fl.write(f"file '{png}'\n")
+            capa_in = ["-f", "concat", "-safe", "0", "-i", lista_c]
+        fin = (f"[1:v]format=rgba,fps={fps}[ov];[f][ov]overlay=0:0,{entrada_fade}"
+               f"fade=t=out:st={dur - 0.15:.2f}:d=0.15,format=yuv420p")
         salida_clip = ["-t", f"{dur:.3f}", "-an", "-c:v", "libx264", "-preset", "veryfast",
                        "-crf", "26", "-r", str(fps), clip]
         try:
-            correr(["ffmpeg", "-y", *entrada, "-i", seg["capa"], "-filter_complex", f"{base};{fin}", *salida_clip])
+            correr(["ffmpeg", "-y", *entrada, *capa_in, "-filter_complex", f"{base};{fin}", *salida_clip])
         except RuntimeError as e:
             if not (seg.get("fondo") or seg.get("foto") or seg.get("fotos") or seg.get("video_real")):
                 raise
             print(f"Fallo el video de fondo de la parte {i + 1}, uso fondo liso. ({e})")
             liso = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
-            correr(["ffmpeg", "-y", *liso, "-i", seg["capa"], "-filter_complex", f"[0:v]setsar=1[f];{fin}", *salida_clip])
+            correr(["ffmpeg", "-y", *liso, *capa_in, "-filter_complex", f"[0:v]setsar=1[f];{fin}", *salida_clip])
         clips.append(clip)
     # La portada (para la historia) es un cuadro del gancho
-    correr(["ffmpeg", "-y", "-ss", "1", "-i", clips[0], "-frames:v", "1", "-q:v", "2", portada_salida])
+    # La portada se toma cuando el titulo ya aparecio completo
+    momento = max(min(duraciones[0] - 0.4, 2.5), 0.5)
+    correr(["ffmpeg", "-y", "-ss", f"{momento:.2f}", "-i", clips[0], "-frames:v", "1", "-q:v", "2", portada_salida])
 
     lista = os.path.join(tmp, "lista.txt")
     with open(lista, "w") as f:
@@ -1080,7 +1138,10 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
                 f"[v1][md]amix=inputs=2:duration=first:normalize=0[a]",
                 "-map", "[a]", "-t", f"{total:.3f}", "-ar", "48000", audio])
 
-    correr(["ffmpeg", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+    # Barra de progreso amarilla arriba: muestra cuanto falta y ayuda a que se mire hasta el final
+    barra = f"[0:v]drawbox=x=0:y=0:w='iw*t/{total:.3f}':h=12:color=0xFFC400@1:t=fill[v]"
+    correr(["ffmpeg", "-y", "-i", video, "-i", audio, "-filter_complex", barra, "-map", "[v]", "-map", "1:a",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "128k", "-ar", "48000", "-shortest", "-movflags", "+faststart", salida])
     shutil.rmtree(tmp, ignore_errors=True)
     return total, bool(voces), bool(temas)
@@ -1466,49 +1527,73 @@ def main():
     claves_en = [c for c in (guion.get("palabras_clave_en") or []) if isinstance(c, str) and c.strip()][:3]
     aprobados = []                                   # fondos ya verificados, para reusar si falta alguno
 
-    def fondo(indice):
-        """Para cada parte prueba las palabras clave empezando por una distinta (rota el orden),
-        primero video real, despues foto real y por ultimo video de stock. Todo verificado por la IA."""
-        orden = claves[indice % len(claves):] + claves[:indice % len(claves)] if claves else []
-        for clave in orden:
-            ruta, credito = buscar_video_real(clave, carpeta, reales_usados, contexto)
-            if ruta:
-                if credito not in autores:
-                    autores.append(credito)
-                aprobados.append({"video_real": ruta})
-                return {"video_real": ruta}
-            ruta, credito = buscar_foto(clave, carpeta, fotos_usadas, contexto)
-            if ruta:
-                if credito not in autores:
-                    autores.append(credito)
-                # una segunda foto (del mismo tema o de la siguiente palabra clave) para darle mas contexto
-                fotos = [ruta]
-                for clave2 in [clave] + [c for c in orden if c != clave]:
-                    ruta2, credito2 = buscar_foto(clave2, carpeta, fotos_usadas, contexto)
-                    if ruta2:
-                        fotos.append(ruta2)
-                        if credito2 not in autores:
-                            autores.append(credito2)
-                        break
-                media = {"fotos": fotos} if len(fotos) > 1 else {"foto": ruta}
-                aprobados.append(media)
-                return media
+    def _registrar(credito):
+        if credito and credito not in autores:
+            autores.append(credito)
+
+    def _foto(clave, orden):
+        ruta, credito = buscar_foto(clave, carpeta, fotos_usadas, contexto)
+        if not ruta:
+            return None
+        _registrar(credito)
+        fotos = [ruta]
+        for clave2 in [clave] + [c for c in orden if c != clave]:
+            ruta2, credito2 = buscar_foto(clave2, carpeta, fotos_usadas, contexto)
+            if ruta2:
+                fotos.append(ruta2)
+                _registrar(credito2)
+                break
+        return {"fotos": fotos} if len(fotos) > 1 else {"foto": ruta}
+
+    def _video_stock(indice):
         orden_en = claves_en[indice % len(claves_en):] + claves_en[:indice % len(claves_en)] if claves_en else []
         for busqueda in orden_en:
             ruta, autor = buscar_video(busqueda, carpeta, usados, contexto)
             if ruta:
-                if autor and autor not in autores:
-                    autores.append(autor)
-                aprobados.append({"fondo": ruta})
+                _registrar(autor)
                 return {"fondo": ruta}
-        if aprobados:                                # mejor repetir una imagen correcta que poner una equivocada
+        return None
+
+    def fondo(indice):
+        """Gancho: imagen real del protagonista (para reconocerlo al instante).
+        Desarrollo: PRIMERO VIDEO (real o de stock relacionado) para que el Reel tenga movimiento;
+        foto solo si no hay video que pase el control de la IA."""
+        orden = claves[indice % len(claves):] + claves[:indice % len(claves)] if claves else []
+        media = None
+        for clave in orden:                               # 1) video real del tema
+            ruta, credito = buscar_video_real(clave, carpeta, reales_usados, contexto)
+            if ruta:
+                _registrar(credito)
+                media = {"video_real": ruta}
+                break
+        if not media and indice == 0:                     # 2a) gancho: foto del protagonista
+            for clave in orden:
+                media = _foto(clave, orden)
+                if media:
+                    break
+        if not media:                                     # 2b) desarrollo: video de stock del tema
+            media = _video_stock(indice)
+        if not media:                                     # 3) si no hay video, foto
+            for clave in orden:
+                media = _foto(clave, orden)
+                if media:
+                    break
+        if media:
+            aprobados.append(media)
+            return media
+        if aprobados:                                     # mejor repetir algo correcto que algo equivocado
             return dict(aprobados[indice % len(aprobados)])
         return {"fondo": None}
 
-    segmentos = [{**fondo(0), "capa": os.path.join(carpeta, "c0.png")}]
+    segmentos = [{**fondo(0), "capa": os.path.join(carpeta, "c0.png"),
+                  "render": lambda n, ruta: capa_gancho(guion, ruta, n),
+                  "n_palabras": palabras_de(guion["gancho"]), "ritmo": 0.35}]   # el gancho aparece rapido
     capa_gancho(guion, segmentos[0]["capa"])
     for i, p in enumerate(guion["placas"][:3]):
-        seg = {**fondo(i + 1), "capa": os.path.join(carpeta, f"c{i + 1}.png")}
+        seg = {**fondo(i + 1), "capa": os.path.join(carpeta, f"c{i + 1}.png"),
+               "render": (lambda n, ruta, p=p, i=i: capa_desarrollo(p, i, len(guion["placas"]),
+                                                                    guion["categoria"], ruta, n)),
+               "n_palabras": palabras_de(p["pantalla"])}
         capa_desarrollo(p, i, len(guion["placas"]), guion["categoria"], seg["capa"])
         segmentos.append(seg)
     # Si alguna parte quedo sin fondo pero otras si tienen, reusa uno verificado
