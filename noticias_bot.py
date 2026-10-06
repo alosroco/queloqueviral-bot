@@ -119,6 +119,7 @@ PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 CF_ACCOUNT_ID = os.environ.get("CF_ACCOUNT_ID", "").strip()
 CF_API_TOKEN = os.environ.get("CF_API_TOKEN", "").strip()
+MIN_FONDOS = 3                             # partes con imagen minimas para mandar el Reel a aprobar
 MAX_ILUSTRACIONES_IA = 5                   # por Reel (la cuota gratis de Cloudflare es diaria)
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 YT_CLIENT_ID = os.environ.get("YT_CLIENT_ID", "")
@@ -505,8 +506,8 @@ ESTRUCTURA:
 - gancho: la frase que atrapa en los primeros 2 segundos (en pantalla, maximo 60 caracteres).
 - 3 placas de desarrollo: 1) que paso, 2) el contexto o dato mas llamativo, 3) por que importa o que sigue.
   Para cada placa: "titulo" (2 a 4 palabras, ej: "Que paso", "El dato clave", "Que sigue"),
-  "pantalla" (texto para leer, maximo 120 caracteres) y "voz" (lo que dice la voz en off,
-  1 o 2 oraciones cortas, MAXIMO 20 palabras).
+  "pantalla" (resumen corto de la parte, maximo 120 caracteres) y "voz" (lo que dice la voz en off, que
+  ADEMAS aparece como subtitulo en pantalla: 1 o 2 oraciones cortas y claras, MAXIMO 22 palabras).
 - El Reel completo debe durar unos 30 segundos: se breve y directo.
 - tono: "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es importante, triste o delicada.
 - pregunta: una pregunta corta para invitar a comentar (maximo 60 caracteres), ej: "¿Tu que harias?", "¿Lo sabias?".
@@ -694,6 +695,42 @@ def capa_gancho(g, ruta, n=None):
     img.save(ruta)
 
 
+def bloques_subtitulo(texto, maximo=5):
+    """Divide el texto en bloques cortos (hasta 5 palabras, o hasta un signo de puntuacion)."""
+    bloques, actual = [], []
+    for palabra in texto.split():
+        actual.append(palabra)
+        if len(actual) >= maximo or palabra[-1:] in ".,;:?!":
+            bloques.append(actual)
+            actual = []
+    if actual:
+        bloques.append(actual)
+    return bloques
+
+
+def capa_subtitulo(p, numero, total, categoria, ruta, bloque, activa):
+    """Titulo de la parte fijo + subtitulo grande con la palabra que se esta diciendo en amarillo."""
+    img, d = capa_nueva()
+    etiqueta(d, categoria, ARRIBA)
+    puntos(d, numero, total)
+    titulo_en_recuadro(d, p.get("titulo") or "", fuente(True, 60), 980)
+    f = fuente(True, 74)
+    texto = " ".join(bloque)
+    lineas = partir(texto, f, ANCHO - 2 * MARGEN)
+    y = 1070
+    contador = 0
+    for linea in lineas:
+        x = (ANCHO - f.getlength(linea)) / 2
+        for palabra in linea.split():
+            color = ACENTO if contador == activa else TEXTO
+            d.text((x, y), palabra, font=f, fill=color, stroke_width=4, stroke_fill=(0, 0, 0, 235))
+            x += f.getlength(palabra + " ")
+            contador += 1
+        y += int(f.size * 1.18)
+    firma(d)
+    img.save(ruta)
+
+
 def capa_desarrollo(p, numero, total, categoria, ruta, n=None):
     img, d = capa_nueva()
     etiqueta(d, categoria, ARRIBA)
@@ -735,7 +772,11 @@ def capa_cierre(medios, creadores, autores_video, ruta, pregunta="", aviso=""):
 # ======================== FOTOS REALES (Wikimedia Commons) ========================
 WIKI_UA = {"User-Agent": "QueloQueViralBot/1.0 (https://alosroco.github.io/queloqueviral-bot/)"}
 FOTO_NO = ("flag", "bandera", "map", "mapa", "logo", "coat of arms", "escudo", "signature", "firma",
-           "diagram", "chart", "icon", "seal", "location", ".svg")
+           "diagram", "chart", "icon", "seal", "location", ".svg", "postcard", "postal", "greetings", "poster",
+           "cartel", "afiche", "illustration", "ilustracion", "drawing", "dibujo", "painting", "pintura",
+           "cartoon", "caricatura", "advert", "publicidad", "cover", "portada", "stamp", "sello", "banner",
+           "screenshot", "captura", "infographic", "comic", "lithograph", "engraving", "grabado", "sketch",
+           "vintage", "collage", "montage", "meme")
 
 
 def _licencia_ok(lic):
@@ -760,8 +801,8 @@ def _info_commons(params, videos=False):
         meta = ii.get("extmetadata", {})
         titulo = pg.get("title", "").lower()
         lic = meta.get("LicenseShortName", {}).get("value", "")
-        tipos_ok = TIPOS_VIDEO if videos else ("image/jpeg", "image/png")
-        if (ii.get("mime") not in tipos_ok or ii.get("width", 0) < (640 if videos else 700)
+        tipos_ok = TIPOS_VIDEO if videos else ("image/jpeg",)
+        if (ii.get("mime") not in tipos_ok or ii.get("width", 0) < (640 if videos else 1000)
                 or (videos and ii.get("size", 0) > 80 * 1024 * 1024)
                 or any(p in titulo for p in FOTO_NO) or not _licencia_ok(lic)):
             continue
@@ -823,15 +864,19 @@ def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
             json={"model": MODELO_IA, "max_tokens": 5, "messages": [{"role": "user", "content": [
                 {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": datos}},
                 {"type": "text", "text": (
-                    f"Noticia: {contexto}\nProtagonista buscado: {nombre}\n"
-                    "¿Esta imagen muestra al protagonista buscado, o un lugar u objeto directamente relacionado "
-                    "con esta noticia? Responde NO si muestra a otra persona, un tema distinto (por ejemplo otro "
-                    "deporte o evento), un grafico, mapa, texto o logo. Responde solo SI o NO.") if estricto else (
+                    f"Tema del video: {contexto}\nBuscamos una imagen de: {nombre}\n"
+                    "¿Esta imagen corresponde a lo buscado? Si lo buscado es una PERSONA, tiene que ser esa persona "
+                    "(no otra). Si es un lugar, un animal, una comida, un objeto, un deporte o un concepto, alcanza con "
+                    "que lo muestre claramente o algo directamente relacionado con el tema. Responde NO si es de otro "
+                    "tema o muestra a otra persona. Ademas tiene que ser una FOTOGRAFIA REAL de buena calidad, "
+                    "nitida y atractiva como fondo de un video: responde NO si es una postal, un cartel, un dibujo, "
+                    "una pintura, una ilustracion, un collage, una foto antigua o borrosa, una captura de pantalla, "
+                    "un grafico o mapa, o si tiene letras o textos grandes visibles. Responde solo SI o NO.") if estricto else (
                     f"Noticia: {contexto}\nEscena buscada: {nombre}\n"
                     "Esta es una imagen ilustrativa de fondo para un video sobre la noticia. ¿La escena es coherente "
                     "con el tema (mismo deporte, mismo tipo de lugar o situacion)? NO hace falta que aparezca la "
-                    "persona de la noticia. Responde NO solo si es de otro tema, tiene banderas, textos o logos "
-                    "visibles, o es inapropiada. Responde solo SI o NO.")}]}]})
+                    "persona de la noticia. Responde NO si es de otro tema, tiene banderas, textos o logos "
+                    "visibles, es de mala calidad o borrosa, o es inapropiada. Responde solo SI o NO.")}]}]})
         r.raise_for_status()
         respuesta = "".join(b.get("text", "") for b in r.json()["content"]).strip().upper()
         return respuesta.startswith("SI") or respuesta.startswith("SÍ")
@@ -842,6 +887,7 @@ def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
 
 MAX_VERIFICACIONES = 6      # imagenes que se le muestran a la IA por cada parte del Reel
 DIAG = {"candidatas": 0, "aceptadas": 0, "rechazadas": 0, "stock_aceptados": 0, "stock_rechazados": 0,
+        "stock_encontrados": 0, "stock_descarga_fallida": 0, "ia_generadas": 0, "ia_fallidas": 0,
         "fuentes_con_error": set()}
 
 
@@ -897,7 +943,8 @@ def _candidatos_openverse(nombre, claves):
     fotos = []
     for it in r.get("results", []):
         texto = " ".join([it.get("title") or ""] + [t.get("name", "") for t in it.get("tags") or []])
-        if not _titulo_relacionado(texto, claves) or (it.get("width") or 0) < 700:
+        if (not _titulo_relacionado(texto, claves) or (it.get("width") or 0) < 1000
+                or any(p in texto.lower() for p in FOTO_NO)):
             continue
         lic = f"CC {it.get('license', '').upper()} {it.get('license_version', '')}".strip()
         if it.get("license") in ("cc0", "pdm"):
@@ -952,10 +999,7 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
         if c["url"] and c["titulo"] not in vistos:
             vistos.add(c["titulo"])
             unicos.append(c)
-    if len(unicos) > 2:
-        resto = unicos[1:]
-        random.shuffle(resto)
-        unicos = unicos[:1] + resto
+    # Se respetan el orden de relevancia: Wikipedia, categoria del tema en Commons, NASA, Openverse, Pixabay
     DIAG["candidatas"] += len(unicos)
     verificadas = 0
     for c in unicos:
@@ -1055,8 +1099,10 @@ def generar_ilustracion(descripcion, carpeta, contexto=""):
             imagen = (js.get("result") or {}).get("image")
             if not imagen:
                 print(f"Cloudflare no devolvio imagen: {str(js.get('errors') or js)[:200]}")
+                DIAG["ia_fallidas"] += 1
                 continue
             IA_USADAS["cantidad"] += 1
+            DIAG["ia_generadas"] += 1
             original = os.path.join(carpeta, f"ia{IA_USADAS['cantidad']}.jpg")
             with open(original, "wb") as f:
                 f.write(base64.b64decode(imagen))
@@ -1123,6 +1169,7 @@ def _bajar_video(url, carpeta, usados, clave):
         tipo = r.headers.get("Content-Type", "")
         if r.status_code != 200 or len(r.content) < 50_000 or "html" in tipo:
             print(f"Descarga invalida ({r.status_code}, {tipo}, {len(r.content)} bytes): {url[:80]}")
+            DIAG["stock_descarga_fallida"] += 1
             return None
         with open(ruta, "wb") as f:
             f.write(r.content)
@@ -1163,10 +1210,11 @@ def buscar_video(busqueda, carpeta, usados, contexto=""):
                 if clave in usados or v.get("duration", 0) < 4 or not video_apto(v.get("tags"), busqueda):
                     continue
                 opciones = [o for o in (v.get("videos") or {}).values()
-                            if o.get("url") and 720 <= (o.get("height") or 0) <= 2200]
+                            if o.get("url") and 540 <= (o.get("height") or 0) <= 2200]
                 if not opciones:
                     continue
-                for o in sorted(opciones, key=lambda o: -o["height"])[:2]:   # si falla la grande, prueba otra
+                DIAG["stock_encontrados"] += 1
+                for o in sorted(opciones, key=lambda o: -o["height"]):      # si falla un tamano, prueba los otros
                     ruta = _bajar_video(o["url"], carpeta, usados, clave)
                     if ruta:
                         if _verificar_video(ruta, busqueda, contexto):
@@ -1217,16 +1265,34 @@ def duracion(ruta):
 VOZ_ELEGIDA = random.choice(VOCES)
 
 
+TIEMPOS_VOZ = {}      # ruta de voz -> [(segundo_inicio, palabra), ...]
+
+
 def generar_voces(textos, carpeta):
-    """Devuelve la lista de archivos de voz, o None si el servicio de voz no responde."""
+    """Devuelve la lista de archivos de voz, o None si el servicio de voz no responde.
+    Ademas guarda en TIEMPOS_VOZ el instante exacto en que se pronuncia cada palabra."""
     try:
         import edge_tts
+
+        async def una(texto, ruta):
+            try:
+                com = edge_tts.Communicate(texto, VOZ_ELEGIDA, rate=VELOCIDAD_VOZ, boundary="WordBoundary")
+            except TypeError:                              # versiones viejas de edge-tts
+                com = edge_tts.Communicate(texto, VOZ_ELEGIDA, rate=VELOCIDAD_VOZ)
+            tiempos = []
+            with open(ruta, "wb") as f:
+                async for parte in com.stream():
+                    if parte["type"] == "audio":
+                        f.write(parte["data"])
+                    elif parte["type"] == "WordBoundary":
+                        tiempos.append((parte["offset"] / 10_000_000, parte.get("text", "")))
+            TIEMPOS_VOZ[ruta] = tiempos
 
         async def todas():
             rutas = []
             for i, t in enumerate(textos):
                 ruta = os.path.join(carpeta, f"voz{i}.mp3")
-                await edge_tts.Communicate(t, VOZ_ELEGIDA, rate=VELOCIDAD_VOZ).save(ruta)
+                await una(t, ruta)
                 rutas.append(ruta)
             return rutas
         return asyncio.run(todas())
@@ -1313,7 +1379,34 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         entrada_fade = "" if i == 0 else "fade=t=in:st=0:d=0.15,"
         # Capa de texto: fija, o animada palabra por palabra al ritmo de la voz
         capa_in = ["-i", seg["capa"]]
-        if seg.get("render") and seg.get("n_palabras"):
+        if seg.get("render_sub") and seg.get("texto_voz"):
+            # Subtitulos sincronizados: cada palabra aparece resaltada justo cuando se pronuncia
+            palabras = seg["texto_voz"].split()
+            tiempos = TIEMPOS_VOZ.get(voces[i], []) if voces else []
+            if len(tiempos) == len(palabras):
+                inicios = [t for t, _ in tiempos]
+            else:                                           # si no coinciden, reparto proporcional al largo
+                habla = (dur - 0.5) if voces else dur * 0.85
+                pesos = [len(p_) + 2 for p_ in palabras]
+                acum, inicios = 0.0, []
+                for w in pesos:
+                    inicios.append(acum * habla / sum(pesos))
+                    acum += w
+            bloques = bloques_subtitulo(seg["texto_voz"])
+            lista_c = os.path.join(tmp, f"capas{i}.txt")
+            k = 0
+            with open(lista_c, "w") as fl:
+                for b_i, bloque in enumerate(bloques):
+                    for a_i in range(len(bloque)):
+                        png = os.path.join(tmp, f"sub{i}_{k}.png")
+                        seg["render_sub"](bloque, a_i, png)
+                        fin_k = inicios[k + 1] if k + 1 < len(inicios) else dur
+                        ini_k = 0.0 if k == 0 else inicios[k]
+                        fl.write(f"file '{png}'\nduration {max(fin_k - ini_k, 0.04):.3f}\n")
+                        k += 1
+                fl.write(f"file '{png}'\n")
+            capa_in = ["-f", "concat", "-safe", "0", "-i", lista_c]
+        elif seg.get("render") and seg.get("n_palabras"):
             n_pal = seg["n_palabras"]
             habla = (dur - 0.5) if voces else dur * 0.8
             ventana = min(habla * seg.get("ritmo", 0.9), habla)      # tiempo en el que aparecen las palabras
@@ -1344,6 +1437,12 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     momento = max(min(duraciones[0] - 0.4, 2.5), 0.5)
     correr(["ffmpeg", "-y", "-ss", f"{momento:.2f}", "-i", clips[0], "-frames:v", "1", "-q:v", "2", portada_salida])
 
+    # Primer fotograma = portada completa (fondo + titulo entero), para que la miniatura nunca sea negra
+    intro = os.path.join(tmp, "intro.mp4")
+    correr(["ffmpeg", "-y", "-loop", "1", "-i", portada_salida, "-t", "0.1", "-r", str(fps),
+            "-vf", f"scale={ANCHO}:{ALTO},setsar=1,format=yuv420p",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", intro])
+    clips = [intro] + clips
     lista = os.path.join(tmp, "lista.txt")
     with open(lista, "w") as f:
         f.writelines(f"file '{c}'\n" for c in clips)
@@ -1351,7 +1450,10 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     correr(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lista, "-c", "copy", video])
     total = sum(duraciones)
 
-    partes = []
+    silencio = os.path.join(tmp, "silencio.wav")
+    correr(["ffmpeg", "-y", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-t", "0.1", silencio])
+    partes = [silencio]
+    total += 0.1
     for i, dur in enumerate(duraciones):
         p = os.path.join(tmp, f"seg{i}.wav")
         if voces:
@@ -1891,19 +1993,28 @@ def main():
         return {"fondo": None}                            # fondo de marca: nunca se repite una imagen
 
     segmentos = [{**fondo(0), "capa": os.path.join(carpeta, "c0.png"),
-                  "render": lambda n, ruta: capa_gancho(guion, ruta, n),
-                  "n_palabras": palabras_de(guion["gancho"]), "ritmo": 0.35}]   # el gancho aparece rapido
+                  }]                                       # el gancho se ve completo desde el primer cuadro
     capa_gancho(guion, segmentos[0]["capa"])
     for i, p in enumerate(guion["placas"][:3]):
         seg = {**fondo(i + 1), "capa": os.path.join(carpeta, f"c{i + 1}.png"),
-               "render": (lambda n, ruta, p=p, i=i: capa_desarrollo(p, i, len(guion["placas"]),
-                                                                    guion["categoria"], ruta, n)),
-               "n_palabras": palabras_de(p["pantalla"])}
+               "render_sub": (lambda bloque, activa, ruta, p=p, i=i: capa_subtitulo(
+                   p, i, len(guion["placas"]), guion["categoria"], ruta, bloque, activa)),
+               "texto_voz": p["voz"]}
         capa_desarrollo(p, i, len(guion["placas"]), guion["categoria"], seg["capa"])
         segmentos.append(seg)
     cierre = {"fondo": None, "capa": os.path.join(carpeta, "cierre.png")}     # cierre con fondo de marca
     capa_cierre(medios or ["ver video citado"], creadores, autores, cierre["capa"], guion.get("pregunta", ""), aviso)
     segmentos.append(cierre)
+
+    # Filtro de calidad: si no hay al menos 3 fondos distintos, no se manda un Reel pobre
+    con_fondo = [sg for sg in segmentos[:-1] if sg.get("fondo") or sg.get("foto") or sg.get("fotos") or sg.get("video_real")]
+    if len(con_fondo) < MIN_FONDOS:
+        ia_txt = ("faltan las claves de Cloudflare" if not (CF_ACCOUNT_ID and CF_API_TOKEN)
+                  else f"IA: {DIAG['ia_generadas']} generadas, {DIAG['ia_fallidas']} fallidas")
+        avisar(f"⚠️ Descarté el Reel sobre «{guion['gancho']}»: solo {len(con_fondo)} de {len(segmentos) - 1} partes "
+               f"con imagen. Fotos: {DIAG['aceptadas']} aceptadas de {DIAG['candidatas']}; videos de stock: "
+               f"{DIAG['stock_encontrados']} encontrados, {DIAG['stock_descarga_fallida']} sin poder bajar; {ia_txt}.")
+        return
 
     textos_voz = [guion.get("voz_gancho") or guion["gancho"]] + [p["voz"] for p in guion["placas"][:3]]
     pregunta = (guion.get("pregunta") or "").strip()
@@ -1928,9 +2039,12 @@ def main():
     nota.append(f"{reales} de {len(segmentos) - 1} partes con imágenes reales del protagonista")
     distintos = len({str(sorted((k, str(v)) for k, v in sg.items() if k in ("foto", "fotos", "fondo", "video_real")))
                      for sg in segmentos[:-1]})
+    ia_txt = ("SIN CLAVES (falta CF_ACCOUNT_ID / CF_API_TOKEN)" if not (CF_ACCOUNT_ID and CF_API_TOKEN)
+              else f"{DIAG['ia_generadas']} generadas, {DIAG['ia_fallidas']} fallidas")
     nota.append(f"{distintos} fondos distintos | fotos: {DIAG['candidatas']} encontradas, "
                 f"{DIAG['aceptadas']} aceptadas, {DIAG['rechazadas']} rechazadas | videos de stock: "
-                f"{DIAG['stock_aceptados']} aceptados, {DIAG['stock_rechazados']} rechazados"
+                f"{DIAG['stock_encontrados']} encontrados, {DIAG['stock_descarga_fallida']} sin poder bajar, "
+                f"{DIAG['stock_aceptados']} aceptados, {DIAG['stock_rechazados']} rechazados | IA: {ia_txt}"
                 + (f" | sin respuesta: {', '.join(sorted(DIAG['fuentes_con_error']))}" if DIAG["fuentes_con_error"] else ""))
     mandar_borrador(reel, caption, id_corrida, modo_prueba,
                     f"ℹ️ Reel de {total:.0f} segundos" + (" — " + "; ".join(nota) if nota else ""))
