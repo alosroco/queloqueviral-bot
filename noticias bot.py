@@ -44,7 +44,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 NOMBRE_CUENTA = "@queloqueviral"            # Cambialo por tu usuario de Instagram
 HORAS_ATRAS = 8                           # Solo noticias de las ultimas X horas
 ESPERA_APROBACION_MIN = 25                # Si no respondes en este tiempo, se descarta
-MODELO_IA = "claude-sonnet-5-5"
+MODELO_IA = "claude-sonnet-5-5"            # escribe los guiones (calidad)
+MODELO_CONTROL = "claude-haiku-4-5-20251001"  # revisa las imagenes: mucho mas barato y alcanza para decir SI/NO
+MAX_CONTROLES_POR_CORRIDA = 30              # tope de imagenes revisadas por la IA en cada corrida (cuida el gasto)
 VOCES = ["es-US-AlonsoNeural", "es-US-PalomaNeural"]   # se alternan: un Reel con voz de hombre, otro de mujer
 VOZ = VOCES[0]
 VELOCIDAD_VOZ = "+15%"
@@ -446,7 +448,8 @@ Decide si hay UN tema que valga la pena publicar YA. Criterios:
 - Tiene que estar creciendo fuerte: mucho volumen, o aparece en varios paises o varias fuentes a la vez.
 - Interes para el publico hispanohablante; atrapante, sorprendente o muy comentado.
 - Que se pueda contar con hechos verificables (no rumores, no chismes sin confirmar).
-- Evita: tragedias explotadas, violencia explicita, victimas menores, contenido sexual, politica partidaria
+- Evita: tragedias explotadas, violencia explicita, ejecuciones, pena de muerte, crimenes violentos,
+  victimas menores, contenido sexual, politica partidaria
   sin interes general, promociones o videos musicales.
 - NO repitas lo ya publicado: {ya_publicadas or 'nada'}
 Si nada es lo bastante fuerte, responde publicar=false. Es MEJOR no publicar que publicar algo flojo.
@@ -529,7 +532,14 @@ def _llamar_ia(texto, max_tokens):
         "content-type": "application/json"},
         json={"model": MODELO_IA, "max_tokens": max_tokens,
               "messages": [{"role": "user", "content": texto}]})
-    r.raise_for_status()
+    if r.status_code != 200:
+        try:
+            motivo = r.json().get("error", {}).get("message", r.text[:200])
+        except Exception:
+            motivo = r.text[:200]
+        if "credit" in motivo.lower():
+            motivo += " → Cargá crédito en console.anthropic.com (Billing)."
+        raise RuntimeError(f"La IA respondió error {r.status_code}: {motivo}")
     t = "".join(b.get("text", "") for b in r.json()["content"])
     t = t.replace("```json", "").replace("```", "").strip()
     return t[t.find("{"):t.rfind("}") + 1]
@@ -571,6 +581,8 @@ Elige los 3 temas MAS VIRALES y llamativos ahora, en orden de preferencia (el 1 
   un video viral como tema si hay medios (*) que lo cubren, o si su descripcion explica bien de que se trata.
 - Nunca elijas videos musicales, trailers ni publicidad como tema.
 - Evita rumores sin confirmar, morbo, tragedias explotadas y temas con victimas menores de edad.
+- Evita tambien ejecuciones, pena de muerte, crimenes violentos, atentados y guerras: son delicados y casi
+  nunca tienen imagenes apropiadas. Prefiere historias sorprendentes, positivas, curiosas o utiles.
 - En politica, solo si es un hecho de alcance internacional; tono neutral.
 - NO repitas estos temas ya publicados: {ya_publicadas or 'ninguno'}
 
@@ -610,7 +622,9 @@ def escribir_guion(tema, notas, tipo="noticia", categoria=""):
 - En pensamiento estoico: solo citas reales y bien atribuidas (Marco Aurelio, Seneca, Epicteto), indicando
   la obra; explica su sentido aplicado a la vida diaria.
 - Estructura de las 3 placas: 1) el dato o idea central, 2) el detalle mas sorprendente, 3) por que importa
-  o como aplicarlo."""
+  o como aplicarlo.
+- Si el tema fue PEDIDO por el usuario y las notas NO confirman lo que dice el pedido (por ejemplo, un
+  hecho que no ocurrio), NO lo afirmes: cuenta solo lo que las notas confirman sobre ese tema."""
     else:
         reglas_datos = """- Usa SOLO hechos que esten en las notas de abajo. Si un dato no esta, NO lo pongas. No inventes cifras,
   nombres, fechas ni declaraciones."""
@@ -682,7 +696,7 @@ que la gente busque sobre ese tema (ej: #DatosCuriosos, #SaludMental). PROHIBIDO
 #noticias, #fyp, #parati, #reels, #explore, #trending.
 
 NOTAS DE LOS MEDIOS:
-{material or "sin notas: usa solo conocimiento ampliamente documentado"}""", 2500)
+{material or "sin notas: usa solo conocimiento ampliamente documentado"}""", 4000)
 
 
 # ======================== 3. ARMAR LAS PLACAS ========================
@@ -977,20 +991,27 @@ def _titulo_relacionado(titulo, claves):
     return distintiva in t
 
 
+CONTROLES = {"n": 0}
+
+
 def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
     """Le muestra la imagen a la IA y pregunta si corresponde a la noticia. Devuelve True o False.
     estricto=True (fotos del protagonista): tiene que mostrarlo a el o algo directamente relacionado.
     estricto=False (video de stock): alcanza con que la escena sea coherente con el tema."""
+    if CONTROLES["n"] >= MAX_CONTROLES_POR_CORRIDA:
+        print("Tope de controles de imagen alcanzado en esta corrida.")
+        return False
+    CONTROLES["n"] += 1
     try:
         img = Image.open(ruta_imagen).convert("RGB")
-        img.thumbnail((512, 512))
+        img.thumbnail((448, 448))
         buf = io.BytesIO()
         img.save(buf, "JPEG", quality=80)
         datos = base64.b64encode(buf.getvalue()).decode()
         r = requests.post("https://api.anthropic.com/v1/messages", timeout=60, headers={
             "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01",
             "content-type": "application/json"},
-            json={"model": MODELO_IA, "max_tokens": 5, "messages": [{"role": "user", "content": [
+            json={"model": MODELO_CONTROL, "max_tokens": 5, "messages": [{"role": "user", "content": [
                 {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": datos}},
                 {"type": "text", "text": (
                     f"Tema del video: {contexto}\nBuscamos una imagen de: {nombre}\n"
@@ -1020,7 +1041,7 @@ def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
 MAX_VERIFICACIONES = 6      # imagenes que se le muestran a la IA por cada parte del Reel
 DIAG = {"candidatas": 0, "aceptadas": 0, "rechazadas": 0, "stock_aceptados": 0, "stock_rechazados": 0,
         "stock_encontrados": 0, "stock_descarga_fallida": 0, "ia_generadas": 0, "ia_fallidas": 0,
-        "stock_busquedas": 0, "stock_resultados": 0, "ia_ideas": 0, "ia_error": "",
+        "stock_busquedas": 0, "stock_resultados": 0, "ia_ideas": 0, "ia_error": "", "ia_rechazadas": 0,
         "fuentes_con_error": set()}
 
 
@@ -1243,6 +1264,7 @@ def generar_ilustracion(descripcion, carpeta, contexto=""):
             # Control: que no tenga textos raros ni algo fuera de tema
             if contexto and not verificar_imagen(original, descripcion, contexto, estricto=False):
                 print("Ilustracion descartada por el control de la IA.")
+                DIAG["ia_rechazadas"] = DIAG.get("ia_rechazadas", 0) + 1
                 return None, None
             ruta = original.replace(".jpg", "_v.jpg")
             componer_foto(original, ruta)
@@ -2097,7 +2119,7 @@ def main():
     pedidos = _cargar_pedidos()
 
     oportunista = False
-    if contenido in ("interes", "radar") and pedidos and INTENTO["n"] == 0:
+    if pedidos and INTENTO["n"] == 0:                  # los pedidos con /tema van primero, en cualquier corrida
         # Primero los temas que pediste con /tema
         pedido = pedidos.pop(0)
         _guardar_pedidos(pedidos)
@@ -2220,6 +2242,8 @@ def main():
     claves = [c for c in (guion.get("palabras_clave") or []) if isinstance(c, str) and c.strip()][:3]
     claves = claves or [x for x in [guion.get("imagen_gancho")] + [p.get("imagen") for p in guion["placas"]] if x][:3]
     claves_en = [c for c in (guion.get("palabras_clave_en") or []) if isinstance(c, str) and c.strip()][:3]
+    if not claves_en:                                   # respaldo si la IA no las devolvio
+        claves_en = [c for c in claves if c][:3]
     aprobados = []                                   # fondos ya verificados, para reusar si falta alguno
 
     def _registrar(credito):
@@ -2326,16 +2350,18 @@ def main():
         avisar(f"⚠️ Descarté el Reel sobre «{guion['gancho']}»: solo {len(con_fondo)} de {len(segmentos) - 1} partes "
                f"con imagen. Fotos: {DIAG['aceptadas']} aceptadas de {DIAG['candidatas']}; videos de stock: "
                f"{DIAG['stock_busquedas']} búsquedas, {DIAG['stock_resultados']} resultados, "
-               f"{DIAG['stock_encontrados']} aptos, {DIAG['stock_descarga_fallida']} sin poder bajar; "
-               f"{ia_txt}, {DIAG['ia_ideas']} ideas" + (f" (error: {DIAG['ia_error']})" if DIAG["ia_error"] else "")
+               f"{DIAG['stock_encontrados']} aptos, {DIAG['stock_descarga_fallida']} sin poder bajar, "
+               f"{DIAG['stock_aceptados']} aceptados y {DIAG['stock_rechazados']} rechazados por la IA; "
+               f"{ia_txt}, {DIAG.get('ia_rechazadas', 0)} rechazadas por el control, {DIAG['ia_ideas']} ideas" + (f" (error: {DIAG['ia_error']})" if DIAG["ia_error"] else "")
                + (f"; sin respuesta: {', '.join(sorted(DIAG['fuentes_con_error']))}" if DIAG["fuentes_con_error"] else "")
                + ".")
-        if INTENTO["n"] < 2:                             # prueba con otro tema
+        if INTENTO["n"] < 1:                             # prueba con otro tema (una vez)
             INTENTO["n"] += 1
             DESCARTADOS.append(guion["gancho"])
             for k in DIAG:
                 DIAG[k] = set() if isinstance(DIAG[k], set) else ("" if isinstance(DIAG[k], str) else 0)
             IA_USADAS["cantidad"] = 0
+            CONTROLES["n"] = 0
             avisar("🔁 Pruebo con otro tema...")
             return main()
         return
