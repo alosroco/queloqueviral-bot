@@ -20,7 +20,7 @@ on:
         description: "Que tipo de Reel armar (auto = segun el horario)"
         default: "auto"
         type: choice
-        options: [auto, interes, radar, noticias]
+        options: [auto, interes, radar, noticias, estadisticas]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
