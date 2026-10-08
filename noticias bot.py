@@ -467,13 +467,23 @@ SENALES DE AHORA:
 
 
 def revisar_datos(guion, notas):
-    """Segunda revision por la IA: saca cualquier dato dudoso antes de publicar."""
+    """Revision final antes de renderizar: VERIFICACION DE DATOS + RETENTION REVIEW + PUNTAJE.
+    La IA corrige automaticamente lo que este flojo y devuelve el guion final con sus puntajes."""
     material = "\n\n".join(f"--- {f} ---\n{t[:2500]}" for f, t in notas) or "sin articulos (tema de conocimiento)"
-    revisado = preguntar_ia(f"""Eres verificador de datos de una cuenta de divulgacion. Revisa este guion.
-Si un dato no esta respaldado por las notas o no es un hecho ampliamente documentado, eliminalo o
-reformulalo de forma prudente. Si es una cita, debe ser real y del autor indicado; si dudas, quita la cita
-y usa una idea general de ese autor sin comillas. No agregues datos nuevos. Mantén EXACTAMENTE la misma
-estructura JSON y los mismos campos.
+    try:
+        revisado = preguntar_ia(f"""Eres el editor final de "QueloQue Viral". Revisa este guion de Reel ANTES de producirlo.
+
+1) VERIFICACION: si un dato no esta respaldado por las notas o no es un hecho ampliamente documentado,
+   eliminalo o reformulalo con prudencia. Una hipotesis nunca puede aparecer como hecho (tampoco en el gancho).
+   Si hay una cita, debe ser real y del autor indicado; si dudas, quitala. No agregues datos nuevos.
+2) RETENTION REVIEW: detecta y CORRIGE gancho debil, informacion lenta o que aparece demasiado pronto,
+   repeticiones, frases de relleno, exceso de texto, falta de open loop, titulos de placa tipo plantilla,
+   pregunta final debil o cierre largo. La duracion debe ser la justa (20-30 s; hasta 35 si es complejo).
+3) PUNTAJE de 0 a 10 del guion FINAL: gancho, curiosidad, retencion, claridad, ritmo, comentarios,
+   compartidos, seguidores, credibilidad. Si algo importante queda debajo de 7, mejoralo antes de responder
+   (sin inventar nada).
+
+Mantén EXACTAMENTE la misma estructura JSON y campos, y agrega "puntajes": {{"gancho": n, ...}}.
 
 GUION:
 {json.dumps(guion, ensure_ascii=False)}
@@ -481,8 +491,11 @@ GUION:
 NOTAS:
 {material}
 
-Responde SOLO con el JSON del guion revisado.""", 3000)
-    return completar_guion({**guion, **revisado})
+Responde SOLO con el JSON del guion final.""", 4000)
+        return completar_guion({**guion, **revisado})
+    except Exception as e:
+        print(f"No se pudo hacer la revision final ({e}); sigo con el guion original.")
+        return guion
 
 
 # ======================== 2. LEER LA NOTA COMPLETA ========================
@@ -601,8 +614,13 @@ TITULARES (* = nota completa disponible, ▶ = video en tendencia de YouTube):
 def completar_guion(g):
     """Si a la IA se le olvida algun campo, lo completa con lo que haya en vez de cortar todo."""
     placas = [p for p in g.get("placas", []) if isinstance(p, dict) and (p.get("pantalla") or p.get("voz"))][:3]
+    rotulos = {"que paso", "qué pasó", "el dato", "el dato clave", "por que importa", "por qué importa",
+               "que sigue", "qué sigue", "que descubrieron", "qué descubrieron", "el detalle", "la idea",
+               "aplicalo", "aplícalo", "el contexto"}
     for p in placas:
         p.setdefault("titulo", "")
+        if p["titulo"].strip().lower().strip("¿?¡!:. ") in rotulos:
+            p["titulo"] = ""
         p["pantalla"] = p.get("pantalla") or p.get("voz", "")
         p["voz"] = p.get("voz") or p["pantalla"]
     if not g.get("gancho") or len(placas) < 2:
@@ -612,6 +630,9 @@ def completar_guion(g):
     g["descripcion"] = g.get("descripcion") or "\n\n".join(p["pantalla"] for p in placas)
     g.setdefault("hashtags", [])
     g.setdefault("pregunta", "")
+    g["cta_seguir"] = (g.get("cta_seguir") or "").strip()
+    if "para más contenido" in g["cta_seguir"].lower() or "para mas contenido" in g["cta_seguir"].lower():
+        g["cta_seguir"] = ""
     return g
 
 
@@ -625,15 +646,16 @@ def escribir_guion(tema, notas, tipo="noticia", categoria=""):
   dietas, dosis ni tratamientos.
 - En pensamiento estoico: solo citas reales y bien atribuidas (Marco Aurelio, Seneca, Epicteto), indicando
   la obra; explica su sentido aplicado a la vida diaria.
-- Estructura de las 3 placas: 1) el dato o idea central, 2) el detalle mas sorprendente, 3) por que importa
-  o como aplicarlo.
 - Si el tema fue PEDIDO por el usuario y las notas NO confirman lo que dice el pedido (por ejemplo, un
   hecho que no ocurrio), NO lo afirmes: cuenta solo lo que las notas confirman sobre ese tema."""
     else:
         reglas_datos = """- Usa SOLO hechos que esten en las notas de abajo. Si un dato no esta, NO lo pongas. No inventes cifras,
   nombres, fechas ni declaraciones."""
-    return preguntar_ia(f"""Eres guionista de "QueloQue Viral", cuenta de Instagram para todo el publico hispanohablante.
-Escribe el guion de UN Reel de 30 a 40 segundos sobre este tema: {tema}
+    return preguntar_ia(f"""Eres guionista de "QueloQue Viral", cuenta de Reels para todo el publico hispanohablante.
+No escribes "un video de una noticia": creas una pieza vertical que DETIENE el scroll, instala una pregunta en
+la cabeza del espectador, mantiene esa curiosidad, entrega una recompensa informativa y termina provocando un
+comentario, un compartido o un seguimiento. Sin sacrificar NUNCA la credibilidad por la viralidad.
+Tema: {tema}
 
 REGLAS ESTRICTAS:
 {reglas_datos}
@@ -643,15 +665,44 @@ REGLAS ESTRICTAS:
   Si las notas estan en ingles, traduce los hechos con cuidado.
 - Tono: claro, atrapante, sin exagerar ni dramatizar.
 
-ESTRUCTURA:
-- gancho: la frase que atrapa en los primeros 2 segundos (en pantalla, maximo 60 caracteres).
-- 3 placas de desarrollo: 1) que paso, 2) el contexto o dato mas llamativo, 3) por que importa o que sigue.
-  Para cada placa: "titulo" (2 a 4 palabras, ej: "Que paso", "El dato clave", "Que sigue"),
-  "pantalla" (resumen corto de la parte, maximo 120 caracteres) y "voz" (lo que dice la voz en off, que
-  ADEMAS aparece como subtitulo en pantalla: 1 o 2 oraciones cortas y claras, MAXIMO 22 palabras).
-- El Reel completo debe durar unos 30 segundos: se breve y directo.
-- tono: "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es importante, triste o delicada.
-- pregunta: una pregunta corta para invitar a comentar (maximo 60 caracteres), ej: "¿Tu que harias?", "¿Lo sabias?".
+DURACION: exactamente lo necesario para contar la historia, ni un segundo mas.
+- Historia simple: 20 a 25 s (unas 50 a 60 palabras habladas en total). Normal: 25 a 30 s (60 a 75 palabras).
+  Solo si es excepcionalmente compleja y aporta valor: hasta 35 s (85 palabras). Indica "complejidad".
+- Elimina introducciones, frases de relleno, repeticiones y finales largos.
+
+ESTRUCTURA DE RETENCION (preguntas internas para construir el guion; NO se escriben en pantalla):
+- gancho (0-2 s): ¿por que deberia detenerme? Antes de elegirlo, escribe 3 a 5 opciones en
+  "hooks_candidatos" y elige la mejor por curiosidad, claridad, impacto, credibilidad y capacidad de frenar el
+  scroll. Fuerte pero VERDADERO: nada de clickbait falso ni exageraciones. Maximo 60 caracteres en pantalla.
+  "estilo_hook": "pregunta", "dato", "misterio", "contraste" o "impacto" (para medir que estilo rinde mas).
+- placa 1 (contexto + descubrimiento): que esta pasando y que ocurrio realmente.
+- placa 2 (curiosidad): lo sorprendente o inesperado.
+- placa 3 (relevancia): por que me importa o como me afecta / como aplicarlo.
+- OPEN LOOPS: cuando tenga sentido, termina una placa planteando una curiosidad que se responde en la
+  siguiente (ej: "Pero lo realmente extrano esta debajo."). NUNCA inventes misterios artificiales.
+- "titulo" de cada placa: un TITULAR INFORMATIVO de 2 a 6 palabras con lo que pasa en esa parte
+  (ej: "UNA ABERTURA EN LA LUNA", "MIDE 100 METROS"). PROHIBIDO usar rotulos de plantilla como "Que paso",
+  "El dato", "Por que importa", "Que sigue", "Que descubrieron".
+- "voz" de cada placa: lo que dice la voz en off, que ADEMAS aparece como subtitulo: frases cortas y claras,
+  maximo 20 palabras. "pantalla": resumen corto (maximo 100 caracteres) para la descripcion.
+- "voz_gancho": version hablada del gancho, maximo 12 palabras.
+
+RIGOR (prioridad absoluta):
+- Distingue hecho confirmado, hipotesis, posibilidad y especulacion, y usa el verbo que corresponde
+  ("podria", "creen que", "segun un estudio"). Nunca conviertas una hipotesis en un hecho para mejorar el
+  gancho. Ej: si "podria ser una cueva", NO "descubrieron una cueva" sino "una abertura que podria llevar a
+  una cueva".
+- Fuentes: prioriza la fuente primaria, despues organismos oficiales, universidades y medios confiables.
+
+CIERRE E INTERACCION:
+- "pregunta": una pregunta corta y especifica del tema que invite a comentar (max 60 caracteres). Variala:
+  "¿Tu que harias?", "¿Lo sabias?", "¿Te animarias?", "¿Esto te parece posible?", o una propia del tema.
+- "cta_seguir": SOLO cuando sea natural (mas o menos 1 de cada 3 Reels), una invitacion a seguir la cuenta
+  CONTEXTUAL y breve, relacionada con el tema (ej: "Para mas historias asi del espacio, segui a QueloQue
+  Viral."). Si no corresponde, deja "". PROHIBIDO "Seguinos para mas contenido".
+- tono: "alegre" si es curiosidad, entretenimiento, tecnologia o deporte; "seria" si es importante o delicada.
+- categoria: UNA de: CIENCIA, ESPACIO, TECNOLOGIA, IA, ANIMALES, NATURALEZA, SALUD, MENTE, HISTORIA,
+  MUNDO, INSOLITO, DINERO, DEPORTES, VIRAL.
 - Para el gancho y cada placa, "video": 1 a 3 palabras EN INGLES para buscar un video de stock que
   ilustre esa parte (ej: "dog walking road", "football stadium crowd", "smartphone hands").
   * Escenas genericas y CONCRETAS (objetos, lugares, acciones). Nada de personas famosas ni marcas.
@@ -678,15 +729,18 @@ ESTRUCTURA:
      silueta, SIN que se vea la cara, ej: "a tennis player seen from behind smashing his racket on the
      court, umpire chair in the background, tense atmosphere".
   3) un DETALLE o simbolo del tema, ej: "a broken tennis racket lying on a blue hard court".
+  Cada ilustracion debe ayudar a contar algo concreto de la historia (no solo ser bonita), con composicion
+  vertical y el sujeto principal en la mitad superior (abajo va el texto).
   PROHIBIDO: caras visibles, personas reconocibles, nombres, textos, letras, logos, marcas, escudos, banderas
   o camisetas de equipos reales. Describe los lugares con palabras visuales, no con su nombre comercial.
 - Si alguna informacion viene de un video de YouTube, nombra al canal como fuente en "pantalla" o "voz".
 
 Responde SOLO con JSON valido:
-{{"categoria": "UNA PALABRA EN MAYUSCULAS",
+{{"categoria": "UNA DE LA LISTA", "complejidad": "simple, normal o compleja",
+"hooks_candidatos": ["...", "...", "..."], "estilo_hook": "...",
 "gancho": "...", "destacado": "1 a 3 palabras del gancho para resaltar en amarillo", "voz_gancho": "version hablada del gancho, maximo 12 palabras", "video_gancho": "...", "imagen_gancho": "...",
 "placas": [{{"titulo": "...", "pantalla": "...", "voz": "...", "video": "...", "imagen": "..."}}, (3 placas en total)],
-"pregunta": "...",
+"pregunta": "...", "cta_seguir": "... o vacio",
 "palabras_clave": ["...", "...", "..."], "palabras_clave_en": ["...", "...", "..."],
 "ilustraciones": ["...", "...", "..."],
 "tono": "alegre o seria",
@@ -835,7 +889,7 @@ def capa_gancho(g, ruta, n=None):
     destacados = (g.get("destacado") or "").split()
     # El titulo va abajo para no tapar la cara de la foto, que esta arriba
     titulo_en_recuadro(d, g["gancho"], fuente(True, tamano_titulo(g["gancho"])), 1395, n=n, destacados=destacados)
-    texto_con_sombra(d, "Te lo contamos en 30 segundos", fuente(False, 38), TEXTO, 1422)
+    texto_con_sombra(d, "Te lo contamos en segundos", fuente(False, 38), TEXTO, 1422)
     insignia(d, ANCHO - MARGEN - 50, ARRIBA + 29, 50)
     d.text((MARGEN, ABAJO + 20), NOMBRE_CUENTA, font=fuente(True, 34), fill=ACENTO,
            stroke_width=2, stroke_fill=(0, 0, 0, 200))
@@ -860,7 +914,8 @@ def capa_subtitulo(p, numero, total, categoria, ruta, bloque, activa):
     img, d = capa_nueva()
     etiqueta(d, categoria, ARRIBA)
     puntos(d, numero, total)
-    titulo_en_recuadro(d, p.get("titulo") or "", fuente(True, 60), 980)
+    if (p.get("titulo") or "").strip():
+        titulo_en_recuadro(d, p["titulo"].upper(), fuente(True, 56), 980)
     f = fuente(True, 74)
     texto = " ".join(bloque)
     lineas = partir(texto, f, ANCHO - 2 * MARGEN)
@@ -996,6 +1051,28 @@ def _titulo_relacionado(titulo, claves):
 
 
 CONTROLES = {"n": 0}
+HUELLAS = []          # "huellas" de las fotos ya usadas en el Reel, para no repetir la misma foto
+
+
+def huella_imagen(ruta):
+    """Huella visual (dHash 16x16): dos copias de la misma foto dan casi la misma huella,
+    aunque vengan de fuentes distintas, con otro tamano o recortadas un poco."""
+    try:
+        img = Image.open(ruta).convert("L").resize((17, 16), Image.LANCZOS)
+        px = list(img.getdata())
+        bits = 0
+        for y in range(16):
+            for x in range(16):
+                bits = (bits << 1) | (px[y * 17 + x] > px[y * 17 + x + 1])
+        return bits
+    except Exception:
+        return None
+
+
+def es_repetida(huella, tolerancia=40):
+    if huella is None:
+        return False
+    return any(h is not None and bin(h ^ huella).count("1") <= tolerancia for h in HUELLAS)
 
 
 def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
@@ -1020,8 +1097,10 @@ def verificar_imagen(ruta_imagen, nombre, contexto, estricto=True):
                 {"type": "text", "text": (
                     f"Tema del video: {contexto}\nBuscamos una imagen de: {nombre}\n"
                     "¿Esta imagen corresponde a lo buscado? Si lo buscado es una PERSONA, tiene que ser esa persona "
-                    "(no otra). Si es un lugar, un animal, una comida, un objeto, un deporte o un concepto, alcanza con "
-                    "que lo muestre claramente o algo directamente relacionado con el tema. Responde NO si es de otro "
+                    "(no otra). Si es un lugar, un animal, una comida, un objeto, un deporte, una organizacion, un "
+                    "evento o un concepto, alcanza con que lo muestre claramente o algo directamente relacionado con "
+                    "el tema; PERO responde NO si la foto es basicamente el retrato de una persona concreta (un "
+                    "orador, un politico, un ejecutivo) que no es el protagonista del video. Responde NO si es de otro "
                     "tema o muestra a otra persona. Ademas tiene que ser una FOTOGRAFIA real y nitida: responde NO "
                     "si es una postal, un cartel, un dibujo, una pintura, una ilustracion, un collage, una captura "
                     "de pantalla, un grafico o mapa, si esta muy borrosa, o si tiene letras o textos GRANDES que "
@@ -1171,12 +1250,17 @@ def buscar_foto(nombre, carpeta, usados, contexto=""):
             original = os.path.join(carpeta, f"foto{len(usados)}.img")
             with open(original, "wb") as f:
                 f.write(r.content)
+            huella = huella_imagen(original)
+            if es_repetida(huella):                     # la misma foto puede venir de varias fuentes
+                print(f"Foto repetida (ya usada en este Reel): {c['titulo']}")
+                continue
             verificadas += 1
             if not verificar_imagen(original, nombre, contexto):
                 DIAG["rechazadas"] += 1
                 print(f"Descartada por no corresponder a la noticia: {c['titulo']}")
                 continue
             DIAG["aceptadas"] += 1
+            HUELLAS.append(huella)
             ruta = os.path.join(carpeta, f"foto{len(usados)}.jpg")
             componer_foto(original, ruta)
             return ruta, c["credito"]
@@ -1488,6 +1572,11 @@ def elegir_musica(tono):
     return del_tono or todas
 
 
+# Cambio de plano cada 2 segundos (acercamiento del 10%): el video nunca queda "muerto"
+PUNCH = ("zoompan=z='if(lt(mod(in_time,4),2),1,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+         "d=1:s=1080x1920:fps={fps},setsar=1")
+
+
 def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
     """segmentos: lista de {"fondo": video o None, "capa": png con el texto}."""
     tmp = tempfile.mkdtemp()
@@ -1496,7 +1585,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         duraciones = [duracion(v) + 0.45 for v in voces]
     else:
         duraciones = [3.5] + [6.0] * (len(segmentos) - 2) + [4.0]
-    duraciones[-1] += 0.8
+    duraciones[-1] += 0.4                         # cierre breve: no perder retencion al final
     fps = 30
 
     clips = []
@@ -1505,7 +1594,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
         if seg.get("video_real"):
             entrada = ["-stream_loop", "-1", "-i", seg["video_real"]]
             base = (f"[0:v]fps={fps},scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,"
-                    f"crop={ANCHO}:{ALTO},setsar=1,eq=brightness=-0.06[f]")
+                    f"crop={ANCHO}:{ALTO},setsar=1,eq=brightness=-0.06,{PUNCH.format(fps=fps)}[f]")
         elif seg.get("fotos"):
             # Varias fotos en la misma parte: cada una con su zoom, una detras de otra
             sub = []
@@ -1530,7 +1619,8 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
             cuadros = int(dur * fps) + 1
             entrada = ["-i", seg["foto"]]
             base = (f"[0:v]scale={int(ANCHO * 1.5)}:{int(ALTO * 1.5)},"
-                    f"zoompan=z='min(zoom+0.0004,1.06)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+                    f"zoompan=z='(1+min(on*0.0004,0.06))*if(lt(mod(on,{4 * fps}),{2 * fps}),1,1.09)':"
+                    f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
                     f"d={cuadros}:s={ANCHO}x{ALTO}:fps={fps},setsar=1[f]")
         elif seg.get("fondo"):
             inicio = 0.0
@@ -1542,7 +1632,7 @@ def armar_reel(segmentos, textos_voz, salida, portada_salida, tono=""):
                 pass
             entrada = ["-ss", f"{inicio:.2f}", "-stream_loop", "-1", "-i", seg["fondo"]]
             base = (f"[0:v]scale={ANCHO}:{ALTO}:force_original_aspect_ratio=increase,crop={ANCHO}:{ALTO},"
-                    f"fps={fps},setsar=1,eq=brightness=-0.10:saturation=0.95[f]")
+                    f"fps={fps},setsar=1,eq=brightness=-0.10:saturation=0.95,{PUNCH.format(fps=fps)}[f]")
         else:
             entrada = ["-f", "lavfi", "-i", f"color=c=0x{FONDO[0]:02x}{FONDO[1]:02x}{FONDO[2]:02x}:s={ANCHO}x{ALTO}:r={fps}"]
             base = "[0:v]setsar=1[f]"
@@ -1977,6 +2067,24 @@ def ig(metodo, ruta, _reintento=True, **datos):
     return js
 
 
+REGISTRO = os.path.join("publicaciones", "registro.json")
+REGISTRO_ACTUAL = {}
+
+
+def guardar_registro():
+    """Guarda los datos de cada publicacion: base para aprender que funciona mejor (duracion, gancho, categoria)."""
+    if not REGISTRO_ACTUAL:
+        return
+    registro = []
+    if os.path.exists(REGISTRO):
+        with open(REGISTRO, encoding="utf-8") as f:
+            registro = json.load(f)
+    registro.append(dict(REGISTRO_ACTUAL))
+    os.makedirs("publicaciones", exist_ok=True)
+    with open(REGISTRO, "w", encoding="utf-8") as f:
+        json.dump(registro[-500:], f, ensure_ascii=False, indent=1)
+
+
 def guardar_historial(historial_nuevo):
     os.makedirs(CARPETA, exist_ok=True)
     with open(HISTORIAL, "w", encoding="utf-8") as f:
@@ -1984,7 +2092,7 @@ def guardar_historial(historial_nuevo):
     subir_cambios("Historial")
 
 
-def preparar_sitio(archivos, caption, titulos, indice_categoria=None, oportunista=False):
+def preparar_sitio(archivos, caption, titulos, indice_categoria=None, oportunista=False, meta=None):
     """Deja los archivos en la carpeta 'sitio' para que GitHub Pages los publique
     (lo hace el paso siguiente del workflow) y guarda lo pendiente de publicar."""
     os.makedirs("sitio", exist_ok=True)
@@ -1993,7 +2101,7 @@ def preparar_sitio(archivos, caption, titulos, indice_categoria=None, oportunist
     with open("pendiente.json", "w", encoding="utf-8") as f:
         json.dump({"archivos": [os.path.basename(a) for a in archivos], "caption": caption,
                    "titulos": titulos, "indice_categoria": indice_categoria,
-                   "oportunista": oportunista}, f, ensure_ascii=False)
+                   "oportunista": oportunista, "meta": meta or {}}, f, ensure_ascii=False)
 
 
 def esperar_urls(urls):
@@ -2355,7 +2463,7 @@ def main():
                     notas.append((n["fuente"], f"{n['titulo']}. {n.get('texto_largo', '')}"))
                     fuentes.append(n["fuente"])
             if sum(len(t) for _, t in notas) >= 800:
-                guion = completar_guion(escribir_guion(tema["tema"], notas))
+                guion = revisar_datos(completar_guion(escribir_guion(tema["tema"], notas)), notas)
                 break
             print(f"Poca informacion sobre '{tema['tema']}', pruebo el siguiente.")
 
@@ -2497,13 +2605,15 @@ def main():
                 DIAG[k] = set() if isinstance(DIAG[k], set) else ("" if isinstance(DIAG[k], str) else 0)
             IA_USADAS["cantidad"] = 0
             CONTROLES["n"] = 0
+            HUELLAS.clear()
             avisar("🔁 Pruebo con otro tema...")
             return main()
         return
 
     textos_voz = [guion.get("voz_gancho") or guion["gancho"]] + [p["voz"] for p in guion["placas"][:3]]
     pregunta = (guion.get("pregunta") or "").strip()
-    textos_voz.append((pregunta + " " if pregunta else "") + "Síguenos en QueloQue Viral.")
+    cta = guion.get("cta_seguir") or ""
+    textos_voz.append(" ".join(x for x in (pregunta, cta) if x) or "QueloQue Viral.")
     reel = os.path.join(carpeta, f"reel-{id_corrida}.mp4")
     portada = os.path.join(carpeta, f"portada-{id_corrida}.jpg")
     total, con_voz, con_musica = armar_reel(segmentos, textos_voz, reel, portada,
@@ -2530,6 +2640,15 @@ def main():
                 f"{ilustradas} con ilustración IA (de {len(segmentos) - 1})")
     distintos = len({str(sorted((k, str(v)) for k, v in sg.items() if k in ("foto", "fotos", "fondo", "video_real")))
                      for sg in segmentos[:-1]})
+    pts = guion.get("puntajes") or {}
+    if isinstance(pts, dict) and pts:
+        try:
+            prom = sum(float(v) for v in pts.values()) / len(pts)
+            nota.append(f"Puntaje del guion: {prom:.1f}/10 (gancho {pts.get('gancho', '?')}, "
+                        f"retención {pts.get('retencion', pts.get('retención', '?'))}, "
+                        f"credibilidad {pts.get('credibilidad', '?')}) | estilo de gancho: {guion.get('estilo_hook', '?')}")
+        except Exception:
+            pass
     ia_txt = ("SIN CLAVES (falta CF_ACCOUNT_ID / CF_API_TOKEN)" if not (CF_ACCOUNT_ID and CF_API_TOKEN)
               else f"{DIAG['ia_generadas']} generadas, {DIAG['ia_fallidas']} fallidas")
     nota.append(f"{distintos} fondos distintos | fotos: {DIAG['candidatas']} encontradas, "
@@ -2554,7 +2673,11 @@ def main():
             print(f"No pude guardar el tema descartado: {e}")
             avisar("🗑 Reel descartado.")
         return
-    preparar_sitio([reel, portada], caption, [guion["gancho"]], indice_cat, oportunista)
+    meta = {"categoria": guion.get("categoria"), "duracion": round(total, 1), "estilo_hook": guion.get("estilo_hook"),
+            "complejidad": guion.get("complejidad"), "tipo": "oportunista" if oportunista else contenido,
+            "puntajes": guion.get("puntajes") or {}, "cta_seguir": bool(guion.get("cta_seguir")),
+            "hora": datetime.now(ARGENTINA).strftime("%H:%M")}
+    preparar_sitio([reel, portada], caption, [guion["gancho"]], indice_cat, oportunista, meta)
     print("Aprobado. El workflow sigue con la publicacion.")
 
 
@@ -2579,6 +2702,8 @@ def publicar():
         estado["temas"].append(p["titulos"][0])
         _guardar_radar(estado)
     guardar_historial((historial + p["titulos"])[-40:])
+    REGISTRO_ACTUAL.update({"fecha": datetime.now(ARGENTINA).strftime("%Y-%m-%d"), "titulo": p["titulos"][0],
+                            "instagram": link, **(p.get("meta") or {})})
     avisar(f"✅ Reel publicado en @{usuario}\n{link}" +
            ("\n📲 Historia publicada" if historia_ok else "\n⚠️ La historia no se pudo publicar"))
 
@@ -2587,6 +2712,7 @@ def publicar():
         try:
             reel = os.path.join("sitio", p["archivos"][0])
             link_yt = subir_a_youtube(reel, p["titulos"][0], p["caption"])
+            REGISTRO_ACTUAL["youtube"] = link_yt
             extra = ("\n🔒 Quedo PRIVADO (YouTube exige auditoria para publicar por API). "
                      "Para publicarlo: YouTube Studio → Contenido → Visibilidad → Publico.") if YT_PRIVACIDAD != "public" else ""
             avisar(f"▶️ Subido a YouTube Shorts\n{link_yt}{extra}")
@@ -2602,6 +2728,11 @@ def publicar():
         except Exception as e:
             avisar(f"⚠️ No se pudo enviar a TikTok: {e}")
         subir_cambios("Token de TikTok")                     # guarda el token renovado
+    try:
+        guardar_registro()
+        subir_cambios("Registro de la publicacion")
+    except Exception as e:
+        print(f"No pude guardar el registro: {e}")
 
 if __name__ == "__main__":
     try:
