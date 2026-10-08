@@ -88,27 +88,46 @@ FUENTES_RSS = {
 }
 # ---- Contenido de INTERES GENERAL ("virales de todos los tiempos") ----
 # Se alternan con las noticias del dia: 2 noticias + 2 de interes general por dia.
-CATEGORIA_ANIMALES = "animales"          # todos los dias, en la primera publicacion de interes general
-CATEGORIAS_INTERES = [
-    "espacio y astronomia", "naturaleza", "alimentacion y nutricion", "datos curiosos",
-    "ciencia y descubrimientos", "pensamiento estoico", "salud y bienestar", "deportes: historias y datos",
-    "salud mental y habitos", "historia y personajes",
+CATEGORIA_ANIMALES = "animales"          # todos los dias a las 9: comportamientos, historias, descubrimientos
+CATEGORIA_ANIMALES_CURIOSOS = "animales: curiosidades y especies sorprendentes"   # todos los dias a las 14
+CATEGORIAS_INTERES = [                   # rotan a las 9 y a las 20
+    "espacio y astronomia", "ciencia y descubrimientos", "datos curiosos", "tecnologia",
+    "inteligencia artificial", "insolito", "historia y personajes", "dinero", "viral",
 ]
+DESCRIPCION_CATEGORIA = {
+    "animales": "curiosidades del reino animal, especies sorprendentes o poco conocidas, comportamientos "
+                "increibles y records de animales: lo que mas atrapa a los amantes de los animales",
+    "datos curiosos": "datos sorprendentes y verificables sobre el mundo, el cuerpo humano o la vida cotidiana",
+    "tecnologia": "inventos, avances y curiosidades tecnologicas explicadas facil",
+    "inteligencia artificial": "avances, usos sorprendentes y curiosidades de la IA, explicados facil y sin exagerar",
+    "insolito": "hechos REALES extranos, raros o increibles, bien documentados",
+    "dinero": "historia del dinero, economia curiosa, records y datos de economia cotidiana "
+              "(SIN consejos de inversion ni recomendaciones financieras)",
+    "viral": "fenomenos virales de internet o de la historia, explicados: que paso y por que se volvio viral",
+}
 CATEGORIAS_SALUD = {"alimentacion y nutricion", "salud y bienestar", "salud mental y habitos"}
 FUENTES_INTERES = {
     "NASA": ("https://www.nasa.gov/feed/", {"espacio y astronomia", "ciencia y descubrimientos"}),
-    "NASA Ciencia": ("https://science.nasa.gov/feed/", {"espacio y astronomia", "ciencia y descubrimientos", "naturaleza", "animales"}),
-    "ScienceDaily": ("https://www.sciencedaily.com/rss/all.xml", {"ciencia y descubrimientos", "salud y bienestar", "naturaleza", "animales", "alimentacion y nutricion"}),
+    "NASA Ciencia": ("https://science.nasa.gov/feed/", {"espacio y astronomia", "ciencia y descubrimientos", "naturaleza", "animales", "animales: curiosidades y especies sorprendentes"}),
+    "ScienceDaily": ("https://www.sciencedaily.com/rss/all.xml", {"ciencia y descubrimientos", "salud y bienestar", "naturaleza", "animales", "animales: curiosidades y especies sorprendentes", "alimentacion y nutricion"}),
     "ScienceDaily Salud": ("https://www.sciencedaily.com/rss/health_medicine.xml", {"salud y bienestar", "alimentacion y nutricion", "salud mental y habitos"}),
     "ScienceDaily Mente": ("https://www.sciencedaily.com/rss/mind_brain.xml", {"salud mental y habitos", "ciencia y descubrimientos"}),
-    "ScienceDaily Plantas y Animales": ("https://www.sciencedaily.com/rss/plants_animals.xml", {"naturaleza", "animales"}),
-    "Smithsonian": ("https://www.smithsonianmag.com/rss/latest_articles/", {"historia y personajes", "naturaleza", "animales", "ciencia y descubrimientos", "datos curiosos"}),
+    "ScienceDaily Plantas y Animales": ("https://www.sciencedaily.com/rss/plants_animals.xml", {"naturaleza", "animales", "animales: curiosidades y especies sorprendentes"}),
+    "Smithsonian": ("https://www.smithsonianmag.com/rss/latest_articles/", {"historia y personajes", "naturaleza", "animales", "animales: curiosidades y especies sorprendentes", "ciencia y descubrimientos", "datos curiosos", "insolito", "viral"}),
     "OMS": ("https://www.who.int/rss-feeds/news-english.xml", {"salud y bienestar", "alimentacion y nutricion"}),
     "Harvard Health": ("https://www.health.harvard.edu/blog/feed", {"salud y bienestar", "alimentacion y nutricion", "salud mental y habitos"}),
-    "The Conversation": ("https://theconversation.com/es/articles.atom", {"ciencia y descubrimientos", "salud y bienestar", "salud mental y habitos", "historia y personajes", "naturaleza", "animales"}),
-    "BBC Mundo Ciencia": ("https://feeds.bbci.co.uk/mundo/temas/ciencia/rss.xml", {"ciencia y descubrimientos", "espacio y astronomia", "naturaleza", "animales"}),
-    "Mongabay": ("https://news.mongabay.com/feed/", {"animales", "naturaleza"}),
-    "ScienceDaily Animales": ("https://www.sciencedaily.com/rss/plants_animals/animals.xml", {"animales"}),
+    "The Conversation": ("https://theconversation.com/es/articles.atom", {"ciencia y descubrimientos", "salud y bienestar", "salud mental y habitos", "historia y personajes", "naturaleza", "animales", "animales: curiosidades y especies sorprendentes"}),
+    "BBC Mundo Ciencia": ("https://feeds.bbci.co.uk/mundo/temas/ciencia/rss.xml", {"ciencia y descubrimientos", "espacio y astronomia", "naturaleza", "animales", "animales: curiosidades y especies sorprendentes"}),
+    "BBC Mundo Tecnologia": ("https://feeds.bbci.co.uk/mundo/temas/tecnologia/rss.xml",
+                             {"tecnologia", "inteligencia artificial"}),
+    "BBC Mundo Economia": ("https://feeds.bbci.co.uk/mundo/temas/economia/rss.xml", {"dinero"}),
+    "Xataka": ("https://www.xataka.com/feedburner.xml", {"tecnologia", "inteligencia artificial", "datos curiosos"}),
+    "MIT Technology Review": ("https://www.technologyreview.com/feed/", {"tecnologia", "inteligencia artificial"}),
+    "The Verge IA": ("https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", {"inteligencia artificial"}),
+    "Atlas Obscura": ("https://www.atlasobscura.com/feeds/latest", {"insolito", "historia y personajes", "datos curiosos"}),
+    "Mongabay": ("https://news.mongabay.com/feed/", {"animales", "naturaleza", CATEGORIA_ANIMALES_CURIOSOS}),
+    "ScienceDaily Animales": ("https://www.sciencedaily.com/rss/plants_animals/animals.xml",
+                              {"animales", CATEGORIA_ANIMALES_CURIOSOS}),
     "BBC Mundo Salud": ("https://feeds.bbci.co.uk/mundo/temas/salud/rss.xml", {"salud y bienestar", "alimentacion y nutricion", "salud mental y habitos"}),
 }
 AVISO_SALUD = "Información general: no reemplaza la consulta con un profesional de la salud."
@@ -175,10 +194,23 @@ def guardar_token(nombre, valor):
 
 
 def subir_cambios(mensaje):
+    """Guarda los cambios en el repositorio. Si mientras tanto el repositorio cambio (otra corrida o un archivo
+    que subiste), primero trae esos cambios y vuelve a intentar: asi nunca se pierde nada."""
     for c in (["git", "config", "user.name", "bot-noticias"],
               ["git", "config", "user.email", "bot@users.noreply.github.com"],
-              ["git", "add", "publicaciones"], ["git", "commit", "-m", mensaje], ["git", "push"]):
+              ["git", "add", "publicaciones"], ["git", "commit", "-m", mensaje]):
         subprocess.run(c, check=False)
+    for intento in range(4):
+        if subprocess.run(["git", "push", "origin", "HEAD"], check=False).returncode == 0:
+            return True
+        print(f"El repositorio cambio mientras tanto; actualizo y reintento ({intento + 1}/4)...")
+        r = subprocess.run(["git", "pull", "--rebase", "--autostash", "origin", "HEAD"], check=False)
+        if r.returncode != 0:
+            subprocess.run(["git", "rebase", "--abort"], check=False)
+            subprocess.run(["git", "pull", "--no-rebase", "-X", "ours", "--no-edit", "origin", "HEAD"], check=False)
+        time.sleep(2 + intento * 3)
+    print("No pude guardar los cambios en el repositorio.")
+    return False
 
 
 IG_TOKEN = leer_token("instagram", IG_TOKEN)
@@ -314,9 +346,9 @@ def juntar_interes(categoria):
 
 
 def proxima_categoria():
-    """La primera publicacion de interes general del dia es siempre de ANIMALES (segmento muy buscado).
-    Las otras rotan por el resto de las categorias."""
-    if datetime.now(ARGENTINA).hour < 12:
+    """A las 14 hs siempre ANIMALES (segmento muy buscado). A las 9 y a las 20 rotan las demas categorias."""
+    hora = datetime.now(ARGENTINA).hour
+    if 12 <= hora < 17:                         # 14 hs: animales, todos los dias
         return None, CATEGORIA_ANIMALES
     estado = {}
     if os.path.exists(ESTADO_INTERES):
@@ -336,7 +368,7 @@ def elegir_tema_interes(categoria, items, ya_publicadas):
     lista = "\n".join(f"[{i}] ({n['fuente']}) {n['titulo']} | {n['descripcion']}" for i, n in enumerate(items))
     return preguntar_ia(f"""Eres editor de "QueloQue Viral", cuenta de Instagram en espanol para todo el publico
 hispanohablante. Ademas de noticias, publicamos contenido de INTERES GENERAL que atrapa: "virales de todos los
-tiempos". Categoria de hoy: {categoria}.
+tiempos". Categoria de hoy: {categoria} — {DESCRIPCION_CATEGORIA.get(categoria, '')}.
 
 Elige 3 temas posibles, en orden de preferencia, que generen curiosidad y ganas de compartir.
 - Si hay articulos abajo, prioriza los mas sorprendentes (indica sus numeros en "ids").
@@ -462,7 +494,7 @@ Responde SOLO con JSON valido:
 noticias sobre esto (en el idioma en que mas se habla del tema)", "motivo": "por que esta caliente"}}
 
 SENALES DE AHORA:
-{lista}""")
+{lista}""", 800, MODELO_CONTROL)          # modelo economico: alcanza para elegir entre tendencias
     return r if r.get("publicar") and r.get("tema") else None
 
 
@@ -546,7 +578,7 @@ def _llamar_ia(texto, max_tokens):
     r = requests.post("https://api.anthropic.com/v1/messages", timeout=120, headers={
         "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01",
         "content-type": "application/json"},
-        json={"model": MODELO_IA, "max_tokens": max_tokens,
+        json={"model": modelo or MODELO_IA, "max_tokens": max_tokens,
               "messages": [{"role": "user", "content": texto}]})
     if r.status_code != 200:
         try:
@@ -561,7 +593,7 @@ def _llamar_ia(texto, max_tokens):
     return t[t.find("{"):t.rfind("}") + 1]
 
 
-def preguntar_ia(texto, max_tokens=2000):
+def preguntar_ia(texto, max_tokens=2000, modelo=None):
     """Pide una respuesta en JSON. Si viene mal formada, le pide a la IA que la corrija."""
     texto += ("\n\nIMPORTANTE: dentro de los textos NO uses comillas dobles (\"). "
               "Si necesitas citar algo, usa comillas simples o «».")
@@ -639,7 +671,8 @@ def completar_guion(g):
 def escribir_guion(tema, notas, tipo="noticia", categoria=""):
     material = "\n\n".join(f"--- {fuente} ---\n{texto}" for fuente, texto in notas)
     if tipo == "interes":
-        reglas_datos = f"""- Es contenido de INTERES GENERAL (categoria: {categoria}), no una noticia del dia.
+        reglas_datos = f"""- Es contenido de INTERES GENERAL (categoria: {categoria}: {DESCRIPCION_CATEGORIA.get(categoria, '')}),
+  no una noticia del dia.
 - Usa los hechos de las notas de abajo; si no hay notas, usa SOLO conocimiento ampliamente documentado y
   aceptado. No inventes cifras, fechas, citas ni estudios.
 - En salud, alimentacion o salud mental: informacion general y prudente, sin consejos personalizados,
@@ -1818,6 +1851,37 @@ def cargar_rechazados():
     return []
 
 
+def _normal(t):
+    t = "".join(c for c in unicodedata.normalize("NFD", (t or "").lower()) if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^a-z0-9ñ ]", " ", t).strip()
+
+
+def es_rechazado(guion, rechazados):
+    """Control directo (no depende de la IA): mismo protagonista o casi el mismo titulo que un tema descartado."""
+    claves = [_normal(c) for c in (guion.get("palabras_clave") or []) if c]
+    gancho = set(w for w in _normal(guion.get("gancho")).split() if len(w) > 3)
+    for r in rechazados:
+        m = re.search(r"\(([^)]*)\)\s*$", r)
+        claves_r = [_normal(x) for x in (m.group(1).split(",") if m else []) if x.strip()]
+        gancho_r = set(w for w in _normal(r.split(" (")[0]).split() if len(w) > 3)
+        mismo_protagonista = claves and claves_r and claves[0] and (
+            claves[0] == claves_r[0] or claves[0] in claves_r[0] or claves_r[0] in claves[0])
+        if mismo_protagonista:
+            original = (guion.get("palabras_clave") or [""])[0]
+            nombre_propio = sum(1 for w in original.split() if w[:1].isupper()) >= 2
+            # Una persona o nombre propio: mismo tema. Algo generico (ej. "Pulpo"): solo si el titulo se parece.
+            if nombre_propio or (gancho & gancho_r):
+                return True
+        comunes = gancho & gancho_r
+        if gancho and gancho_r and (len(comunes) >= 3 or len(comunes) / max(len(gancho | gancho_r), 1) >= 0.4):
+            return True
+        # nombres escritos junto o separado ("Maricarmen" / "Mari Carmen")
+        junto = _normal(r).replace(" ", "")
+        if claves and claves[0] and len(claves[0].replace(" ", "")) > 5 and claves[0].replace(" ", "") in junto:
+            return True
+    return False
+
+
 def anotar_rechazado(guion):
     """Guarda el tema que descartaste para que el bot no lo vuelva a proponer."""
     descripcion = guion["gancho"]
@@ -1828,7 +1892,8 @@ def anotar_rechazado(guion):
     os.makedirs("publicaciones", exist_ok=True)
     with open(TEMAS_RECHAZADOS, "w", encoding="utf-8") as f:
         json.dump(rechazados, f, ensure_ascii=False, indent=1)
-    subir_cambios("Tema descartado")
+    if not subir_cambios("Tema descartado"):
+        raise RuntimeError("no se pudo guardar en el repositorio")
 
 
 def _cargar_pedidos():
@@ -2471,6 +2536,13 @@ def main():
         avisar("⚠️ No consegui informacion suficiente para armar un Reel confiable. Salteo esta vuelta.")
         return
 
+    if not pedidos_atendidos() and es_rechazado(guion, RECHAZADOS):
+        print(f"Salteo «{guion['gancho']}»: es un tema que descartaste.")
+        DESCARTADOS.append(guion["gancho"])
+        if INTENTO["n"] < 2:
+            INTENTO["n"] += 1
+            return main()
+        return
     texto_tema = (categoria + " " + guion["gancho"] + " " + " ".join(guion.get("palabras_clave") or [])).lower()
     NASA_ACTIVA["si"] = any(p in texto_tema for p in ("espacio", "astronom", "nasa", "planeta", "luna", "marte",
                                                         "estrella", "galaxia", "cohete", "satélite", "satelite",
@@ -2671,7 +2743,8 @@ def main():
             avisar("🗑 Reel descartado. No voy a volver a proponer ese tema.")
         except Exception as e:
             print(f"No pude guardar el tema descartado: {e}")
-            avisar("🗑 Reel descartado.")
+            avisar("🗑 Reel descartado, pero ⚠️ no pude guardar el tema en la lista de descartados. "
+                   "Si vuelve a aparecer, avisame.")
         return
     meta = {"categoria": guion.get("categoria"), "duracion": round(total, 1), "estilo_hook": guion.get("estilo_hook"),
             "complejidad": guion.get("complejidad"), "tipo": "oportunista" if oportunista else contenido,
