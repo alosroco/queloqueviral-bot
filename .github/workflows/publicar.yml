@@ -6,9 +6,9 @@ on:
     - cron: "0 12 * * *"    # 09:00 Argentina
     - cron: "0 17 * * *"    # 14:00 Argentina
     - cron: "0 23 * * *"    # 20:00 Argentina
-    # Radar de tendencias cada 2 horas (8:30 a 22:30 Argentina): hasta 2 oportunistas por dia
-    # y los Reels a la carta que pidas con /tema
-    - cron: "30 11,13,15,17,19,21,23,1 * * *"
+    # Radar de tendencias a las 12:00 y 18:00 Argentina: hasta 2 oportunistas por dia
+    # (los pedidos con /tema y /estadisticas se atienden en cualquier corrida)
+    - cron: "5 15,21 * * *"
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
@@ -58,7 +58,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
-      CONTENIDO: ${{ github.event_name == 'schedule' && (startsWith(github.event.schedule, '30 ') && 'radar' || 'interes') || github.event.inputs.contenido }}
+      CONTENIDO: ${{ github.event_name == 'schedule' && (startsWith(github.event.schedule, '5 ') && 'radar' || 'interes') || github.event.inputs.contenido }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
