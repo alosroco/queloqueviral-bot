@@ -116,6 +116,7 @@ ESTADO_INTERES = os.path.join("publicaciones", "estado_interes.json")
 # Horarios (hora Argentina) de cada tipo de publicacion; el resto del tiempo, noticias
 HORAS_INTERES = {9, 14, 20}              # 3 de interes general fijos; las noticias las cubre el radar
 TEMAS_PEDIDOS = os.path.join("publicaciones", "temas_pedidos.json")
+TEMAS_RECHAZADOS = os.path.join("publicaciones", "temas_rechazados.json")   # los que descartaste en Telegram
 
 PAISES_YOUTUBE = ["US", "GB", "MX", "ES", "AR", "CO"]
 TENDENCIAS_RSS = {p: f"https://trends.google.com/trending/rss?geo={p}" for p in ["US", "GB", "MX", "ES", "AR"]}
@@ -345,7 +346,8 @@ Elige 3 temas posibles, en orden de preferencia, que generen curiosidad y ganas 
   "Enciclopedia Britannica").
 - PROHIBIDO: consejos medicos personalizados, dietas, dosis o tratamientos; suicidio, autolesiones,
   trastornos alimentarios; pseudociencia; frases atribuidas sin seguridad de su autor.
-- No repitas: {ya_publicadas or 'nada'}
+- NO propongas estos temas (ya publicados o descartados por el dueno de la cuenta), ni otros
+  muy parecidos o sobre el mismo hecho: {ya_publicadas or 'ninguno'}
 
 Responde SOLO con JSON valido:
 {{"temas": [{{"tema": "descripcion corta", "ids": [numeros], "fuente_texto": "fuente si ids vacios"}}]}}
@@ -451,7 +453,8 @@ Decide si hay UN tema que valga la pena publicar YA. Criterios:
 - Evita: tragedias explotadas, violencia explicita, ejecuciones, pena de muerte, crimenes violentos,
   victimas menores, contenido sexual, politica partidaria
   sin interes general, promociones o videos musicales.
-- NO repitas lo ya publicado: {ya_publicadas or 'nada'}
+- NO propongas estos temas (ya publicados o descartados por el dueno de la cuenta), ni otros
+  muy parecidos o sobre el mismo hecho: {ya_publicadas or 'ninguno'}
 Si nada es lo bastante fuerte, responde publicar=false. Es MEJOR no publicar que publicar algo flojo.
 
 Responde SOLO con JSON valido:
@@ -584,7 +587,8 @@ Elige los 3 temas MAS VIRALES y llamativos ahora, en orden de preferencia (el 1 
 - Evita tambien ejecuciones, pena de muerte, crimenes violentos, atentados y guerras: son delicados y casi
   nunca tienen imagenes apropiadas. Prefiere historias sorprendentes, positivas, curiosas o utiles.
 - En politica, solo si es un hecho de alcance internacional; tono neutral.
-- NO repitas estos temas ya publicados: {ya_publicadas or 'ninguno'}
+- NO propongas estos temas (ya publicados o descartados por el dueno de la cuenta), ni otros
+  muy parecidos o sobre el mismo hecho: {ya_publicadas or 'ninguno'}
 
 Responde SOLO con JSON valido: {{"temas": [{{"tema": "descripcion corta", "ids": [numeros de TODOS los titulares de ese tema]}}]}}
 
@@ -1717,6 +1721,26 @@ def mandar_borrador(reel, caption, id_corrida, modo_prueba, nota):
                             "text": f"¿Publico este Reel y la historia? Tienes {ESPERA_APROBACION_MIN} minutos."})
 
 
+def cargar_rechazados():
+    if os.path.exists(TEMAS_RECHAZADOS):
+        with open(TEMAS_RECHAZADOS, encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def anotar_rechazado(guion):
+    """Guarda el tema que descartaste para que el bot no lo vuelva a proponer."""
+    descripcion = guion["gancho"]
+    claves = ", ".join(c for c in (guion.get("palabras_clave") or []) if c)
+    if claves:
+        descripcion += f" ({claves})"
+    rechazados = (cargar_rechazados() + [descripcion])[-150:]
+    os.makedirs("publicaciones", exist_ok=True)
+    with open(TEMAS_RECHAZADOS, "w", encoding="utf-8") as f:
+        json.dump(rechazados, f, ensure_ascii=False, indent=1)
+    subir_cambios("Tema descartado")
+
+
 def _cargar_pedidos():
     if os.path.exists(TEMAS_PEDIDOS):
         with open(TEMAS_PEDIDOS, encoding="utf-8") as f:
@@ -1731,15 +1755,25 @@ def _guardar_pedidos(pedidos):
 
 
 def _anotar_pedido(mensaje):
-    """Si el mensaje es '/tema ...' del dueno, lo guarda en la cola. Devuelve True si lo anoto."""
+    """Si el mensaje es '/tema ...' del dueno, lo guarda en la cola. Devuelve True si lo anoto.
+    Si es '/estadisticas', manda el informe de las tres redes."""
     texto = (mensaje.get("text") or "").strip()
-    if str(mensaje.get("chat", {}).get("id")) != str(TELEGRAM_CHAT_ID) or not texto.lower().startswith("/tema"):
+    if str(mensaje.get("chat", {}).get("id")) != str(TELEGRAM_CHAT_ID):
+        return False
+    if texto.lower().startswith(("/estadisticas", "/estadísticas", "/stats")):
+        try:
+            avisar(informe_estadisticas())
+        except Exception as e:
+            avisar(f"⚠️ No pude armar las estadísticas: {e}")
+        return False
+    if not texto.lower().startswith("/tema"):
         return False
     pedido = texto[5:].strip(" :-")
     if not pedido:
         avisar("Escribí el tema después del comando, por ejemplo: /tema el pulpo que abre frascos")
         return False
     pedidos = _cargar_pedidos()
+    RECHAZADOS = cargar_rechazados()[-80:]
     pedidos.append(pedido[:200])
     _guardar_pedidos(pedidos)
     avisar(f"📝 Anotado: «{pedido[:200]}». Lo armo en la próxima revisión (como máximo en unas 2 horas). "
@@ -1752,6 +1786,103 @@ PEDIDO_ATENDIDO = {"si": False}
 
 def pedidos_atendidos():
     return PEDIDO_ATENDIDO["si"]
+
+
+def _num(n):
+    try:
+        return f"{int(n):,}".replace(",", ".")
+    except Exception:
+        return "?"
+
+
+def informe_estadisticas():
+    """Seguidores, vistas y me gusta de Instagram, YouTube y TikTok."""
+    lineas = ["📊 Estadísticas de QueloQue Viral", ""]
+    # ---- Instagram ----
+    try:
+        perfil = ig("GET", "me", fields="username,followers_count,media_count")
+        lineas.append(f"📸 Instagram (@{perfil.get('username', '')})")
+        lineas.append(f"Seguidores: {_num(perfil.get('followers_count'))} | Publicaciones: {_num(perfil.get('media_count'))}")
+        medios = ig("GET", "me/media", fields="id,caption,like_count,comments_count,timestamp,media_type",
+                    limit=15).get("data", [])
+        limite = datetime.now(timezone.utc) - timedelta(days=7)
+        recientes = [m for m in medios if datetime.fromisoformat(m["timestamp"].replace("+0000", "+00:00")) >= limite]
+        vistas_ok, detalle = True, []
+        for m in recientes:
+            vistas = None
+            if vistas_ok:
+                try:
+                    ins = ig("GET", f"{m['id']}/insights", metric="views")
+                    vistas = ins["data"][0]["values"][0]["value"]
+                except Exception:
+                    vistas_ok = False
+            titulo = (m.get("caption") or "").split("\n")[0].replace("🔥", "").strip()[:45]
+            detalle.append((vistas or 0, m.get("like_count", 0), m.get("comments_count", 0), titulo))
+        if recientes:
+            lineas.append(f"Últimos 7 días: {len(recientes)} publicaciones, "
+                          f"{_num(sum(d[1] for d in detalle))} me gusta, {_num(sum(d[2] for d in detalle))} comentarios"
+                          + (f", {_num(sum(d[0] for d in detalle))} reproducciones" if vistas_ok else ""))
+            orden = sorted(detalle, key=lambda d: (d[0], d[1]), reverse=True)[:3]
+            lineas.append("Mejores de la semana:")
+            for v, l, c, t in orden:
+                lineas.append(f"  • {t} — " + (f"{_num(v)} repr., " if vistas_ok else "") + f"{_num(l)} ❤️, {_num(c)} 💬")
+            if not vistas_ok:
+                lineas.append("  (Para ver reproducciones hace falta el permiso de estadísticas en el token de Instagram)")
+    except Exception as e:
+        lineas.append(f"📸 Instagram: no disponible ({str(e)[:100]})")
+    lineas.append("")
+    # ---- YouTube ----
+    try:
+        if not YOUTUBE_API_KEY:
+            raise RuntimeError("falta la clave YOUTUBE_API_KEY")
+        canal = requests.get("https://www.googleapis.com/youtube/v3/channels", timeout=20, params={
+            "part": "statistics,contentDetails", "forHandle": "queloqueviral", "key": YOUTUBE_API_KEY}).json()
+        item = (canal.get("items") or [None])[0]
+        if not item:
+            raise RuntimeError("no encontré el canal @queloqueviral")
+        est = item["statistics"]
+        lineas.append("▶️ YouTube")
+        lineas.append(f"Suscriptores: {_num(est.get('subscriberCount'))} | Vistas totales: {_num(est.get('viewCount'))} "
+                      f"| Videos públicos: {_num(est.get('videoCount'))}")
+        lista = requests.get("https://www.googleapis.com/youtube/v3/playlistItems", timeout=20, params={
+            "part": "contentDetails", "maxResults": 15, "key": YOUTUBE_API_KEY,
+            "playlistId": item["contentDetails"]["relatedPlaylists"]["uploads"]}).json()
+        ids = [x["contentDetails"]["videoId"] for x in lista.get("items", [])]
+        if ids:
+            vids = requests.get("https://www.googleapis.com/youtube/v3/videos", timeout=20, params={
+                "part": "snippet,statistics", "id": ",".join(ids), "key": YOUTUBE_API_KEY}).json().get("items", [])
+            vids.sort(key=lambda v: int(v["statistics"].get("viewCount", 0)), reverse=True)
+            lineas.append("Mejores Shorts públicos:")
+            for v in vids[:3]:
+                st = v["statistics"]
+                lineas.append(f"  • {v['snippet']['title'].replace('#Shorts', '').strip()[:45]} — "
+                              f"{_num(st.get('viewCount'))} vistas, {_num(st.get('likeCount', 0))} ❤️")
+        else:
+            lineas.append("(Todavía no hay Shorts públicos: los privados no aparecen en las estadísticas)")
+    except Exception as e:
+        lineas.append(f"▶️ YouTube: no disponible ({str(e)[:100]})")
+    lineas.append("")
+    # ---- TikTok ----
+    try:
+        vigente = leer_token("tiktok", TIKTOK_REFRESH_TOKEN)
+        if not vigente:
+            raise RuntimeError("TikTok no está conectado")
+        tok = tiktok_token({"grant_type": "refresh_token", "refresh_token": vigente})
+        if tok.get("refresh_token") and tok["refresh_token"] != vigente:
+            guardar_token("tiktok", tok["refresh_token"])
+            subir_cambios("Token de TikTok renovado")
+        r = requests.get(f"{TIKTOK_API}/user/info/", timeout=20,
+                         params={"fields": "display_name,follower_count,likes_count,video_count"},
+                         headers={"Authorization": f"Bearer {tok['access_token']}"}).json()
+        u = (r.get("data") or {}).get("user") or {}
+        if "follower_count" not in u:
+            raise RuntimeError("falta el permiso de estadísticas (user.info.stats); se pide cuando TikTok apruebe la app")
+        lineas.append("🎵 TikTok")
+        lineas.append(f"Seguidores: {_num(u.get('follower_count'))} | Me gusta totales: {_num(u.get('likes_count'))} "
+                      f"| Videos: {_num(u.get('video_count'))}")
+    except Exception as e:
+        lineas.append(f"🎵 TikTok: no disponible ({str(e)[:110]})")
+    return "\n".join(lineas)
 
 
 def leer_pedidos_telegram():
@@ -2107,6 +2238,9 @@ def main():
             historial = json.load(f)
 
     contenido = (os.environ.get("CONTENIDO") or "auto").strip().lower()
+    if contenido == "estadisticas":
+        avisar(informe_estadisticas())
+        return
     if contenido not in ("noticias", "interes", "radar"):
         contenido = "interes" if datetime.now(ARGENTINA).hour in HORAS_INTERES else "noticias"
     categoria, indice_cat, aviso = "", None, ""
@@ -2117,6 +2251,7 @@ def main():
         except Exception as e:
             print(f"No pude leer los pedidos de Telegram: {e}")
     pedidos = _cargar_pedidos()
+    RECHAZADOS = cargar_rechazados()[-80:]
 
     oportunista = False
     if pedidos and INTENTO["n"] == 0:                  # los pedidos con /tema van primero, en cualquier corrida
@@ -2147,7 +2282,7 @@ def main():
             print("Ya se publicaron los oportunistas del dia.")
             return
         elegido = elegir_oportunista(senales_tendencia(),
-                                     "; ".join(historial[-30:] + estado.get("temas", []) + DESCARTADOS))
+                                     "; ".join(historial[-30:] + estado.get("temas", []) + DESCARTADOS + RECHAZADOS))
         if not elegido:
             print("Radar: nada lo bastante caliente por ahora.")
             return
@@ -2168,7 +2303,7 @@ def main():
         indice_cat, categoria = proxima_categoria()
         items, fallidas = juntar_interes(categoria)
         print(f"Interes general: {categoria}. {len(items)} articulos. Fuentes con problemas: {fallidas or 'ninguna'}")
-        for tema in elegir_tema_interes(categoria, items, "; ".join(historial[-30:] + DESCARTADOS)):
+        for tema in elegir_tema_interes(categoria, items, "; ".join(historial[-30:] + DESCARTADOS + RECHAZADOS)):
             ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(items)]
             notas, fuentes = [], []
             for i in ids[:3]:
@@ -2200,7 +2335,7 @@ def main():
 
         # Elige el tema y lee las notas completas (si el primero no se puede leer, prueba el siguiente)
         guion = None
-        for tema in elegir_temas(noticias, tendencias, "; ".join(historial[-20:] + DESCARTADOS)):
+        for tema in elegir_temas(noticias, tendencias, "; ".join(historial[-20:] + DESCARTADOS + RECHAZADOS)):
             ids = [i for i in tema.get("ids", []) if isinstance(i, int) and 0 <= i < len(noticias)]
             notas, fuentes = [], []
             for i in sorted(ids, key=lambda i: not es_directo(noticias[i])):
@@ -2412,7 +2547,12 @@ def main():
         avisar("⌛ No hubo respuesta a tiempo. Descarte el Reel.")
         return
     if not respuesta:
-        avisar("🗑 Reel descartado.")
+        try:
+            anotar_rechazado(guion)
+            avisar("🗑 Reel descartado. No voy a volver a proponer ese tema.")
+        except Exception as e:
+            print(f"No pude guardar el tema descartado: {e}")
+            avisar("🗑 Reel descartado.")
         return
     preparar_sitio([reel, portada], caption, [guion["gancho"]], indice_cat, oportunista)
     print("Aprobado. El workflow sigue con la publicacion.")
