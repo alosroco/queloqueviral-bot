@@ -22,5 +22,29 @@
   "cta_seguir": true,
   "hora": "20:21",
   "youtube": "https://youtube.com/shorts/1j8jwAKMYqs"
+ },
+ {
+  "fecha": "2026-10-09",
+  "titulo": "Sonaron alarmas antes de alunizar. ¿Quién escribió el software?",
+  "instagram": "https://www.instagram.com/reel/DeRhM-dD4IS/",
+  "categoria": "HISTORIA",
+  "duracion": 38.7,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "09:32",
+  "youtube": "https://youtube.com/shorts/ynsaJmJxais"
  }
 ]
