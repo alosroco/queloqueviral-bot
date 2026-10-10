@@ -156,5 +156,29 @@
   "cta_seguir": true,
   "hora": "13:37",
   "youtube": "https://youtube.com/shorts/jmsrtkOWIDE"
+ },
+ {
+  "fecha": "2026-10-10",
+  "titulo": "Una ballena no se separó de su cría sin vida",
+  "instagram": "https://www.instagram.com/reel/DeUmK8rDlN8/",
+  "categoria": "ANIMALES",
+  "duracion": 25.4,
+  "estilo_hook": "impacto",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "14:13",
+  "youtube": "https://youtube.com/shorts/30Q0UaUaNeE"
  }
 ]
