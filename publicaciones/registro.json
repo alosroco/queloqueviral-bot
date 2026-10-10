@@ -94,5 +94,19 @@
   "cta_seguir": true,
   "hora": "21:30",
   "youtube": "https://youtube.com/shorts/9iPgyjYaJQQ"
+ },
+ {
+  "fecha": "2026-10-10",
+  "titulo": "Esta tortuga tendría unos 194 años. Esto hallaron en su ADN",
+  "instagram": "https://www.instagram.com/reel/DeUFQ5_Ff9Y/",
+  "categoria": "ANIMALES",
+  "duracion": 47.1,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {},
+  "cta_seguir": true,
+  "hora": "09:27",
+  "youtube": "https://youtube.com/shorts/Eul0qSm7yQA"
  }
 ]
