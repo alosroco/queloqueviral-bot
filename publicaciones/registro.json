@@ -108,5 +108,29 @@
   "cta_seguir": true,
   "hora": "09:27",
   "youtube": "https://youtube.com/shorts/Eul0qSm7yQA"
+ },
+ {
+  "fecha": "2026-10-10",
+  "titulo": "DE TORMENTA A CATEGORÍA 4 EN POCOS DÍAS",
+  "instagram": "https://www.instagram.com/reel/DeUcoFRAAJ7/",
+  "categoria": "NATURALEZA",
+  "duracion": 27.0,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "noticias",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 7,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "12:51",
+  "youtube": "https://youtube.com/shorts/W48kyu3q6rg"
  }
 ]
