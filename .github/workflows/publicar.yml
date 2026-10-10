@@ -13,10 +13,10 @@ on:
         type: choice
         options: [normal, prueba, web, tiktok_link, tiktok_token]
       contenido:
-        description: "Que tipo de Reel armar (auto = segun el horario)"
-        default: "auto"
+        description: "Que Reel armar"
+        default: "noticias"
         type: choice
-        options: [auto, interes, radar, noticias, estadisticas, vera_looks]
+        options: [noticias, animales, varios]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -46,6 +46,8 @@ jobs:
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
       HEYGEN_API_KEY: ${{ secrets.HEYGEN_API_KEY }}
+      WORKER_URL: ${{ secrets.WORKER_URL }}
+      WORKER_SECRETO: ${{ secrets.WORKER_SECRETO }}
       VERA_NOTICIAS: ${{ secrets.VERA_NOTICIAS }}
       VERA_ANIMALES: ${{ secrets.VERA_ANIMALES }}
       VERA_VARIOS: ${{ secrets.VERA_VARIOS }}
