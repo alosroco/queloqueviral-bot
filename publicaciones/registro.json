@@ -180,5 +180,29 @@
   "cta_seguir": false,
   "hora": "14:13",
   "youtube": "https://youtube.com/shorts/30Q0UaUaNeE"
+ },
+ {
+  "fecha": "2026-10-10",
+  "titulo": "Le tomaron la temperatura a un T. rex",
+  "instagram": "https://www.instagram.com/reel/DeUugtxDtvN/",
+  "categoria": "CIENCIA",
+  "duracion": 27.9,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "15:27",
+  "youtube": "https://youtube.com/shorts/rB0YkvGhrgQ"
  }
 ]
