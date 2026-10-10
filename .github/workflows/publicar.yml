@@ -2,13 +2,9 @@ name: QueloQue Viral
 
 on:
   schedule:
-    # 3 Reels de interes general fijos (el de las 9 es siempre de animales)
-    - cron: "0 12 * * *"    # 09:00 Argentina
-    - cron: "0 17 * * *"    # 14:00 Argentina
-    - cron: "0 23 * * *"    # 20:00 Argentina
-    # Radar de tendencias a las 12:00 y 18:00 Argentina: hasta 2 oportunistas por dia
-    # (los pedidos con /tema y /estadisticas se atienden en cualquier corrida)
-    - cron: "5 15,21 * * *"
+    - cron: "0 12 * * *"    # 09:00 Argentina - la noticia mas fuerte del momento
+    - cron: "0 17 * * *"    # 14:00 Argentina - animales
+    - cron: "0 0 * * *"     # 21:00 Argentina - varios: ciencia, NASA, curiosidades, viral
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
@@ -20,7 +16,7 @@ on:
         description: "Que tipo de Reel armar (auto = segun el horario)"
         default: "auto"
         type: choice
-        options: [auto, interes, radar, noticias, estadisticas]
+        options: [auto, interes, radar, noticias, estadisticas, vera_looks]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -37,7 +33,7 @@ concurrency:
 jobs:
   publicar:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 80
     environment:
       name: github-pages
     env:
@@ -49,6 +45,10 @@ jobs:
       PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      HEYGEN_API_KEY: ${{ secrets.HEYGEN_API_KEY }}
+      VERA_NOTICIAS: ${{ secrets.VERA_NOTICIAS }}
+      VERA_ANIMALES: ${{ secrets.VERA_ANIMALES }}
+      VERA_VARIOS: ${{ secrets.VERA_VARIOS }}
       YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
       YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
@@ -58,7 +58,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
-      CONTENIDO: ${{ github.event_name == 'schedule' && (startsWith(github.event.schedule, '5 ') && 'radar' || 'interes') || github.event.inputs.contenido }}
+      CONTENIDO: ${{ github.event_name == 'schedule' && (startsWith(github.event.schedule, '5 ') && 'radar' || (github.event.schedule == '0 12 * * *' && 'noticias' || 'interes')) || github.event.inputs.contenido }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
