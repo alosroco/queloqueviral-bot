@@ -70,5 +70,29 @@
   "cta_seguir": true,
   "hora": "21:03",
   "youtube": "https://youtube.com/shorts/WpI1y5zmE9E"
+ },
+ {
+  "fecha": "2026-10-09",
+  "titulo": "OpenAI y Anthropic se preparan para lo peor, según la prensa",
+  "instagram": "https://www.instagram.com/reel/DeSzPtmkVIl/",
+  "categoria": "IA",
+  "duracion": 40.3,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "radar",
+  "puntajes": {
+   "gancho": 7,
+   "curiosidad": 7,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "21:30",
+  "youtube": "https://youtube.com/shorts/9iPgyjYaJQQ"
  }
 ]
