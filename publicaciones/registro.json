@@ -242,5 +242,29 @@
   "cta_seguir": true,
   "hora": "14:14",
   "youtube": "https://youtube.com/shorts/MdwsmdcZ4Lo"
+ },
+ {
+  "fecha": "2026-10-11",
+  "titulo": "¿Por qué tu perro te mira así?",
+  "instagram": "https://www.instagram.com/reel/DeXYaBxlGy9/",
+  "categoria": "ANIMALES",
+  "duracion": 24.0,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "16:12",
+  "youtube": "https://youtube.com/shorts/xnlObLRYbmE"
  }
 ]
