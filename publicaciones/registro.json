@@ -228,5 +228,19 @@
   "cta_seguir": true,
   "hora": "09:21",
   "youtube": "https://youtube.com/shorts/SgCdfJDgEro"
+ },
+ {
+  "fecha": "2026-10-11",
+  "titulo": "Una serpiente se llama como Slash gracias a una revista",
+  "instagram": "https://www.instagram.com/reel/DeXK48bDVJq/",
+  "categoria": "ANIMALES",
+  "duracion": 28.0,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {},
+  "cta_seguir": true,
+  "hora": "14:14",
+  "youtube": "https://youtube.com/shorts/MdwsmdcZ4Lo"
  }
 ]
