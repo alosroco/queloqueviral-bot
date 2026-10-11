@@ -204,5 +204,29 @@
   "cta_seguir": false,
   "hora": "15:27",
   "youtube": "https://youtube.com/shorts/rB0YkvGhrgQ"
+ },
+ {
+  "fecha": "2026-10-11",
+  "titulo": "El papa León XIV será operado de un pulmón",
+  "instagram": "https://www.instagram.com/reel/DeWpceTjD-s/",
+  "categoria": "SALUD",
+  "duracion": 21.3,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "noticias",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 7,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "09:21",
+  "youtube": "https://youtube.com/shorts/SgCdfJDgEro"
  }
 ]
