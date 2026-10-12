@@ -266,5 +266,29 @@
   "cta_seguir": false,
   "hora": "16:12",
   "youtube": "https://youtube.com/shorts/xnlObLRYbmE"
+ },
+ {
+  "fecha": "2026-10-12",
+  "titulo": "Tu gato podría llevar una «cédula» química en la orina",
+  "instagram": "https://www.instagram.com/reel/DeZrNHEjDkY/",
+  "categoria": "ANIMALES",
+  "duracion": 27.8,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "13:34",
+  "youtube": "https://youtube.com/shorts/DpKkmeN1uOU"
  }
 ]
