@@ -290,5 +290,29 @@
   "cta_seguir": false,
   "hora": "13:34",
   "youtube": "https://youtube.com/shorts/DpKkmeN1uOU"
+ },
+ {
+  "fecha": "2026-10-12",
+  "titulo": "Lo daban por muerto hace 60 años... y está vivo",
+  "instagram": "https://www.instagram.com/reel/DeZwT28jmHb/",
+  "categoria": "ANIMALES",
+  "duracion": 54.7,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "14:19",
+  "youtube": "https://youtube.com/shorts/mXZExxkleW8"
  }
 ]
