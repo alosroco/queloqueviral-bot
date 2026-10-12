@@ -1,4 +1,0 @@
-requests
-Pillow
-edge-tts
-cryptography
