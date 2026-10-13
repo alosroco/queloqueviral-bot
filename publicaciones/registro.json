@@ -314,5 +314,29 @@
   "cta_seguir": true,
   "hora": "14:19",
   "youtube": "https://youtube.com/shorts/mXZExxkleW8"
+ },
+ {
+  "fecha": "2026-10-13",
+  "titulo": "Apple llegó tarde con su pantalla inteligente",
+  "instagram": "https://www.instagram.com/reel/DecCN6ejA8G/",
+  "categoria": "TECNOLOGIA",
+  "duracion": 30.2,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "noticias",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "11:34",
+  "youtube": "https://youtube.com/shorts/SYhsKw5U3yE"
  }
 ]
