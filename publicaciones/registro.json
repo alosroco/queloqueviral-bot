@@ -362,5 +362,29 @@
   "cta_seguir": true,
   "hora": "18:27",
   "youtube": "https://youtube.com/shorts/TCU1V11GbuI"
+ },
+ {
+  "fecha": "2026-10-13",
+  "titulo": "Un biberón de casi 2.000 años, enterrado con un nene",
+  "instagram": "https://www.instagram.com/reel/DedHZz9DbR-/",
+  "categoria": "HISTORIA",
+  "duracion": 46.0,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "21:38",
+  "youtube": "https://youtube.com/shorts/jOhspB71Uqk"
  }
 ]
