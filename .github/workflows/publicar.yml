@@ -2,9 +2,10 @@ name: QueloQue Viral
 
 on:
   schedule:
-    - cron: "0 12 * * *"    # 09:00 Argentina - la noticia mas fuerte del momento
-    - cron: "0 17 * * *"    # 14:00 Argentina - animales
-    - cron: "0 0 * * *"     # 21:00 Argentina - varios: ciencia, NASA, curiosidades, viral
+    - cron: "7 12 * * *"    # 09:07 Argentina - animales
+    - cron: "7 17 * * *"    # 14:07 Argentina - rota: IA, curiosidades, historias humanas, dinero, humor
+    - cron: "7 0 * * *"     # 21:07 Argentina - rota: IA, curiosidades, historias humanas, dinero, humor
+    # (minuto 7: las horas en punto son las mas congestionadas de GitHub)
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
@@ -14,9 +15,9 @@ on:
         options: [normal, prueba, web, tiktok_link, tiktok_token]
       contenido:
         description: "Que Reel armar"
-        default: "noticias"
+        default: "animales"
         type: choice
-        options: [noticias, animales, varios]
+        options: [animales, varios]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -60,7 +61,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
-      CONTENIDO: ${{ github.event_name == 'schedule' && (startsWith(github.event.schedule, '5 ') && 'radar' || (github.event.schedule == '0 12 * * *' && 'noticias' || 'interes')) || github.event.inputs.contenido }}
+      CONTENIDO: ${{ github.event_name == 'schedule' && (github.event.schedule == '7 12 * * *' && 'animales' || 'varios') || github.event.inputs.contenido }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
