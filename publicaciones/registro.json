@@ -386,5 +386,29 @@
   "cta_seguir": true,
   "hora": "21:38",
   "youtube": "https://youtube.com/shorts/jOhspB71Uqk"
+ },
+ {
+  "fecha": "2026-10-14",
+  "titulo": "¿Lechuzas anidando en pleno Manhattan?",
+  "instagram": "https://www.instagram.com/reel/DeeawyQEVo6/",
+  "categoria": "ANIMALES",
+  "duracion": 29.5,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 7,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "09:47",
+  "youtube": "https://youtube.com/shorts/IeZ9TY8AQO0"
  }
 ]
