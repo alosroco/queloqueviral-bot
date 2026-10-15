@@ -410,5 +410,29 @@
   "cta_seguir": true,
   "hora": "09:47",
   "youtube": "https://youtube.com/shorts/IeZ9TY8AQO0"
+ },
+ {
+  "fecha": "2026-10-15",
+  "titulo": "OLVIDADO CASI 100 AÑOS EN UN MUSEO",
+  "instagram": "https://www.instagram.com/reel/Deg_5qfDbCT/",
+  "categoria": "ANIMALES",
+  "duracion": 28.4,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "09:49",
+  "youtube": "https://youtube.com/shorts/uIcpq9Er1Mg"
  }
 ]
