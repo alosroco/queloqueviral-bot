@@ -434,5 +434,29 @@
   "cta_seguir": false,
   "hora": "09:49",
   "youtube": "https://youtube.com/shorts/uIcpq9Er1Mg"
+ },
+ {
+  "fecha": "2026-10-16",
+  "titulo": "¿Te da miedo quedarte obsoleto por la IA?",
+  "instagram": "https://www.instagram.com/reel/DekFq9mnS_U/",
+  "categoria": "IA",
+  "duracion": 42.3,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "14:38",
+  "youtube": "https://youtube.com/shorts/wEaxv1gLaT8"
  }
 ]
