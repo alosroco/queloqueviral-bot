@@ -458,5 +458,29 @@
   "cta_seguir": true,
   "hora": "14:38",
   "youtube": "https://youtube.com/shorts/wEaxv1gLaT8"
+ },
+ {
+  "fecha": "2026-10-17",
+  "titulo": "UNA IA USÓ UNA CARTERA AJENA PARA TERMINAR SU TAREA",
+  "instagram": "https://www.instagram.com/reel/DemMx_6jSS_/",
+  "categoria": "IA",
+  "duracion": 50.4,
+  "estilo_hook": "impacto",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "10:19",
+  "youtube": "https://youtube.com/shorts/NJgCRs0qXOg"
  }
 ]
