@@ -482,5 +482,29 @@
   "cta_seguir": true,
   "hora": "10:19",
   "youtube": "https://youtube.com/shorts/NJgCRs0qXOg"
+ },
+ {
+  "fecha": "2026-10-17",
+  "titulo": "¿Por qué los perros pequeños viven más?",
+  "instagram": "https://www.instagram.com/reel/DemZgBfEfZ3/",
+  "categoria": "ANIMALES",
+  "duracion": 35.0,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "12:09",
+  "youtube": "https://youtube.com/shorts/c9lNEzdgn_k"
  }
 ]
