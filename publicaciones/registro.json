@@ -506,5 +506,29 @@
   "cta_seguir": false,
   "hora": "12:09",
   "youtube": "https://youtube.com/shorts/c9lNEzdgn_k"
+ },
+ {
+  "fecha": "2026-10-17",
+  "titulo": "Trabajaba su tierra y halló dos estatuas de Ramsés II",
+  "instagram": "https://www.instagram.com/reel/DemcN3Pia_r/",
+  "categoria": "HISTORIA",
+  "duracion": 37.5,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "12:33",
+  "youtube": "https://youtube.com/shorts/wHHPXZOsDP8"
  }
 ]
