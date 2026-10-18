@@ -530,5 +530,29 @@
   "cta_seguir": true,
   "hora": "12:33",
   "youtube": "https://youtube.com/shorts/wHHPXZOsDP8"
+ },
+ {
+  "fecha": "2026-10-18",
+  "titulo": "¿Perros sin pelo de hace más de 1.200 años?",
+  "instagram": "https://www.instagram.com/reel/Deo-l1pjREv/",
+  "categoria": "ANIMALES",
+  "duracion": 46.2,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 7,
+   "curiosidad": 7,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "12:12",
+  "youtube": "https://youtube.com/shorts/WGdib1FB2MI"
  }
 ]
