@@ -578,5 +578,29 @@
   "cta_seguir": true,
   "hora": "12:29",
   "youtube": "https://youtube.com/shorts/_RKvY6_LbsU"
+ },
+ {
+  "fecha": "2026-10-18",
+  "titulo": "¿PUEDE UNA BALLENA TRAGARSE A UNA PERSONA?",
+  "instagram": "https://www.instagram.com/reel/DepiTiOjYE7/",
+  "categoria": "ANIMALES",
+  "duracion": 41.7,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "17:24",
+  "youtube": "https://youtube.com/shorts/Xj8zbnylM7U"
  }
 ]
