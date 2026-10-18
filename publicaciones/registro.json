@@ -554,5 +554,29 @@
   "cta_seguir": true,
   "hora": "12:12",
   "youtube": "https://youtube.com/shorts/WGdib1FB2MI"
+ },
+ {
+  "fecha": "2026-10-18",
+  "titulo": "PERDIDA EN TEXAS, HALLADA EN NUEVA JERSEY",
+  "instagram": "https://www.instagram.com/reel/DepAjGICQtP/",
+  "categoria": "ANIMALES",
+  "duracion": 44.0,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "12:29",
+  "youtube": "https://youtube.com/shorts/_RKvY6_LbsU"
  }
 ]
