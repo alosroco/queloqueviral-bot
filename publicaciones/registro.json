@@ -650,5 +650,29 @@
   "cta_seguir": true,
   "hora": "08:33",
   "youtube": "https://youtube.com/shorts/oBzETKBKCqg"
+ },
+ {
+  "fecha": "2026-10-20",
+  "titulo": "UNA PERRA GANÓ UN PREMIO POR OLER VÓMITO DE MAR",
+  "instagram": "https://www.instagram.com/reel/DeuuphtlEU3/",
+  "categoria": "ANIMALES",
+  "duracion": 34.3,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "17:47",
+  "youtube": "https://youtube.com/shorts/WVqlwu7p9d0"
  }
 ]
