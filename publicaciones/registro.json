@@ -626,5 +626,29 @@
   "cta_seguir": true,
   "hora": "21:49",
   "youtube": "https://youtube.com/shorts/Ygqxw33a_3k"
+ },
+ {
+  "fecha": "2026-10-20",
+  "titulo": "¿Tu gato te ignora o sí te escucha?",
+  "instagram": "https://www.instagram.com/reel/DetvHOCDbqX/",
+  "categoria": "ANIMALES",
+  "duracion": 36.8,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 9,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": true,
+  "hora": "08:33",
+  "youtube": "https://youtube.com/shorts/oBzETKBKCqg"
  }
 ]
