@@ -602,5 +602,29 @@
   "cta_seguir": true,
   "hora": "17:24",
   "youtube": "https://youtube.com/shorts/Xj8zbnylM7U"
+ },
+ {
+  "fecha": "2026-10-19",
+  "titulo": "Hay un ave que puede recordar tu cara durante años",
+  "instagram": "https://www.instagram.com/reel/Deslc7nkx6p/",
+  "categoria": "ANIMALES",
+  "duracion": 43.7,
+  "estilo_hook": "dato",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "21:49",
+  "youtube": "https://youtube.com/shorts/Ygqxw33a_3k"
  }
 ]
