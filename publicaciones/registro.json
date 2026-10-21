@@ -674,5 +674,29 @@
   "cta_seguir": true,
   "hora": "17:47",
   "youtube": "https://youtube.com/shorts/WVqlwu7p9d0"
+ },
+ {
+  "fecha": "2026-10-20",
+  "titulo": "Una calabaza de 1.431 kilos rompió el récord mundial",
+  "instagram": "https://www.instagram.com/reel/DevKm0PDbqT/",
+  "categoria": "INSOLITO",
+  "duracion": 44.3,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "21:52",
+  "youtube": "https://youtube.com/shorts/fGmXbnlWFWE"
  }
 ]
