@@ -698,5 +698,19 @@
   "cta_seguir": false,
   "hora": "21:52",
   "youtube": "https://youtube.com/shorts/fGmXbnlWFWE"
+ },
+ {
+  "fecha": "2026-10-21",
+  "titulo": "¿Puede un coral moribundo curarse tocando a su clon?",
+  "instagram": "https://www.instagram.com/reel/DewUln-is-5/",
+  "categoria": "ANIMALES",
+  "duracion": 44.0,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {},
+  "cta_seguir": true,
+  "hora": "08:39",
+  "youtube": "https://youtube.com/shorts/mW2XyYKZI88"
  }
 ]
