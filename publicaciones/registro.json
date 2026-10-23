@@ -760,5 +760,29 @@
   "cta_seguir": false,
   "hora": "18:18",
   "youtube": "https://youtube.com/shorts/sHKF9DBGGoQ"
+ },
+ {
+  "fecha": "2026-10-22",
+  "titulo": "¿Las abejas de la miel son matonas de las flores?",
+  "instagram": "https://www.instagram.com/reel/De0YCiSCmnk/",
+  "categoria": "ANIMALES",
+  "duracion": 43.9,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "22:26",
+  "youtube": "https://youtube.com/shorts/J269Ae4bS-I"
  }
 ]
