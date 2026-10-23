@@ -2,9 +2,9 @@ name: QueloQue Viral
 
 on:
   schedule:
-    - cron: "7 11 * * *"    # 08:07 Argentina - animales
-    - cron: "7 15 * * *"    # 12:07 Argentina - rotacion de prioridades
-    - cron: "7 20 * * *"    # 17:07 Argentina - animales
+    - cron: "7 11 * * *"    # 08:07 Argentina - animales (salvajes e insolitos)
+    - cron: "7 15 * * *"    # 12:07 Argentina - animales (perros, gatos y mascotas)
+    - cron: "7 20 * * *"    # 17:07 Argentina - animales (salvajes e insolitos)
     - cron: "7 0 * * *"     # 21:07 Argentina - rotacion de prioridades
     # (minuto 7: las horas en punto son las mas congestionadas de GitHub)
   workflow_dispatch:        # boton para correrlo a mano
@@ -62,7 +62,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
-      CONTENIDO: ${{ github.event_name == 'schedule' && ((github.event.schedule == '7 11 * * *' || github.event.schedule == '7 20 * * *') && 'animales' || 'varios') || github.event.inputs.contenido }}
+      CONTENIDO: ${{ github.event_name == 'schedule' && (github.event.schedule == '7 0 * * *' && 'varios' || 'animales') || github.event.inputs.contenido }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
