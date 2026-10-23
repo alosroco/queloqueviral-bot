@@ -808,5 +808,29 @@
   "cta_seguir": true,
   "hora": "09:10",
   "youtube": "https://youtube.com/shorts/2c-w8VJgAqw"
+ },
+ {
+  "fecha": "2026-10-23",
+  "titulo": "¿Cuántas palabras puede entender tu perro?",
+  "instagram": "https://www.instagram.com/reel/De2czvHCVIP/",
+  "categoria": "ANIMALES",
+  "duracion": 47.7,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 9,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "17:46",
+  "youtube": "https://youtube.com/shorts/Y6EdpYJsIZg"
  }
 ]
