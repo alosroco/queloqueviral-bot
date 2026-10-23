@@ -784,5 +784,29 @@
   "cta_seguir": false,
   "hora": "22:26",
   "youtube": "https://youtube.com/shorts/J269Ae4bS-I"
+ },
+ {
+  "fecha": "2026-10-23",
+  "titulo": "¿Tu gato y tú comparten más que cariño?",
+  "instagram": "https://www.instagram.com/reel/De1hqIiDEnI/",
+  "categoria": "ANIMALES",
+  "duracion": 41.2,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "09:10",
+  "youtube": "https://youtube.com/shorts/2c-w8VJgAqw"
  }
 ]
