@@ -880,5 +880,19 @@
   "cta_seguir": true,
   "hora": "12:29",
   "youtube": "https://youtube.com/shorts/D5cj3hVS-AE"
+ },
+ {
+  "fecha": "2026-10-24",
+  "titulo": "¿Un ave temida se enamoró en un zoo?",
+  "instagram": "https://www.instagram.com/reel/De5BP0QlVg8/",
+  "categoria": "ANIMALES",
+  "duracion": 40.9,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {},
+  "cta_seguir": false,
+  "hora": "17:43",
+  "youtube": "https://youtube.com/shorts/wRiFT3sh7Ag"
  }
 ]
