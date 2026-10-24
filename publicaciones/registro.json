@@ -856,5 +856,29 @@
   "cta_seguir": true,
   "hora": "08:36",
   "youtube": "https://youtube.com/shorts/cm8vHf3gmeA"
+ },
+ {
+  "fecha": "2026-10-24",
+  "titulo": "¿Qué animal podría vivir más de 250 años?",
+  "instagram": "https://www.instagram.com/reel/De4dNbSDR_f/",
+  "categoria": "ANIMALES",
+  "duracion": 51.5,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "12:29",
+  "youtube": "https://youtube.com/shorts/D5cj3hVS-AE"
  }
 ]
