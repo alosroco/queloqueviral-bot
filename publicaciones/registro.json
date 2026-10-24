@@ -832,5 +832,29 @@
   "cta_seguir": true,
   "hora": "17:46",
   "youtube": "https://youtube.com/shorts/Y6EdpYJsIZg"
+ },
+ {
+  "fecha": "2026-10-24",
+  "titulo": "¿Un caracol sin ojos que vive en la oscuridad total?",
+  "instagram": "https://www.instagram.com/reel/De4CoQjAM-n/",
+  "categoria": "ANIMALES",
+  "duracion": 34.7,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "08:36",
+  "youtube": "https://youtube.com/shorts/cm8vHf3gmeA"
  }
 ]
