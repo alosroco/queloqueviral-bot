@@ -918,5 +918,29 @@
   "cta_seguir": false,
   "hora": "21:55",
   "youtube": "https://youtube.com/shorts/dT-gpoOtyV4"
+ },
+ {
+  "fecha": "2026-10-25",
+  "titulo": "¿Por qué tu gato no siente lo dulce?",
+  "instagram": "https://www.instagram.com/reel/De7j5obH5Se/",
+  "categoria": "ANIMALES",
+  "duracion": 40.2,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "17:25",
+  "youtube": "https://youtube.com/shorts/g_bv7--qKso"
  }
 ]
