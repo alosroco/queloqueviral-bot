@@ -894,5 +894,29 @@
   "cta_seguir": false,
   "hora": "17:43",
   "youtube": "https://youtube.com/shorts/wRiFT3sh7Ag"
+ },
+ {
+  "fecha": "2026-10-24",
+  "titulo": "¿Para qué sirve el bolsillito pequeño de tus jeans?",
+  "instagram": "https://www.instagram.com/reel/De5eD4rFc6U/",
+  "categoria": "HISTORIA",
+  "duracion": 39.0,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "21:55",
+  "youtube": "https://youtube.com/shorts/dT-gpoOtyV4"
  }
 ]
