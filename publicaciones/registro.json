@@ -942,5 +942,29 @@
   "cta_seguir": false,
   "hora": "17:25",
   "youtube": "https://youtube.com/shorts/g_bv7--qKso"
+ },
+ {
+  "fecha": "2026-10-25",
+  "titulo": "¿Qué hizo ella cuando un rayo cayó junto a su novio?",
+  "instagram": "https://www.instagram.com/reel/De8GOBGDgeS/",
+  "categoria": "MUNDO",
+  "duracion": 45.2,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "22:24",
+  "youtube": "https://youtube.com/shorts/5C3wTlDq4vs"
  }
 ]
