@@ -1014,5 +1014,29 @@
   "cta_seguir": true,
   "hora": "08:57",
   "youtube": "https://youtube.com/shorts/e2f9cLNjTE4"
+ },
+ {
+  "fecha": "2026-10-27",
+  "titulo": "¿Tu perro mueve la cola a la derecha o a la izquierda?",
+  "instagram": "https://www.instagram.com/reel/DfAvCidACty/",
+  "categoria": "ANIMALES",
+  "duracion": 39.1,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 9,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "17:38",
+  "youtube": "https://youtube.com/shorts/HOIxgqsmwRw"
  }
 ]
