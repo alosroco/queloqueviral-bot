@@ -990,5 +990,29 @@
   "cta_seguir": true,
   "hora": "21:46",
   "youtube": "https://youtube.com/shorts/iVL3E2GECXI"
+ },
+ {
+  "fecha": "2026-10-27",
+  "titulo": "Esperó nueve años a alguien que no iba a volver",
+  "instagram": "https://www.instagram.com/reel/De_zabQEgM9/",
+  "categoria": "ANIMALES",
+  "duracion": 46.4,
+  "estilo_hook": "contraste",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "08:57",
+  "youtube": "https://youtube.com/shorts/e2f9cLNjTE4"
  }
 ]
