@@ -1038,5 +1038,29 @@
   "cta_seguir": false,
   "hora": "17:38",
   "youtube": "https://youtube.com/shorts/HOIxgqsmwRw"
+ },
+ {
+  "fecha": "2026-10-28",
+  "titulo": "¿Sueñan las arañas? Esto vieron al vigilarlas de noche",
+  "instagram": "https://www.instagram.com/reel/DfCXftvDDgD/",
+  "categoria": "ANIMALES",
+  "duracion": 38.1,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "08:51",
+  "youtube": "https://youtube.com/shorts/Sw1yl01BY7o"
  }
 ]
