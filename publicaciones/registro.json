@@ -1062,5 +1062,29 @@
   "cta_seguir": false,
   "hora": "08:51",
   "youtube": "https://youtube.com/shorts/Sw1yl01BY7o"
+ },
+ {
+  "fecha": "2026-10-28",
+  "titulo": "¿Qué esconde esta salamandra tóxica que solo se ve con luz UV?",
+  "instagram": "https://www.instagram.com/reel/DfDUFo0kfBc/",
+  "categoria": "ANIMALES",
+  "duracion": 41.4,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "17:40",
+  "youtube": "https://youtube.com/shorts/q2xHT1qFQHA"
  }
 ]
