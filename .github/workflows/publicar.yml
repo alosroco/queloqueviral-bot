@@ -2,11 +2,12 @@ name: QueloQue Viral
 
 on:
   schedule:
-    - cron: "7 11 * * *"    # 08:07 Argentina - animales (salvajes e insolitos)
-    - cron: "7 15 * * *"    # 12:07 Argentina - animales (perros, gatos y mascotas)
-    - cron: "7 20 * * *"    # 17:07 Argentina - animales (salvajes e insolitos)
+    - cron: "7 11 * * *"    # 08:07 Argentina - mascotas (perros, gatos)
+    - cron: "7 15 * * *"    # 12:07 Argentina - serie ¿Por qué mi mascota?
+    - cron: "7 20 * * *"    # 17:07 Argentina - animales extraordinarios y naturaleza
     - cron: "7 0 * * *"     # 21:07 Argentina - rotacion de prioridades
     # (minuto 7: las horas en punto son las mas congestionadas de GitHub)
+    # Que se publica en cada horario se configura en PLAN_DIARIO, dentro de noticias_bot.py
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
@@ -18,7 +19,7 @@ on:
         description: "Que Reel armar"
         default: "animales"
         type: choice
-        options: [animales, varios]
+        options: [animales, mascotas, varios]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -62,7 +63,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
-      CONTENIDO: ${{ github.event_name == 'schedule' && (github.event.schedule == '7 0 * * *' && 'varios' || 'animales') || github.event.inputs.contenido }}
+      CONTENIDO: ${{ github.event_name == 'schedule' && 'interes' || github.event.inputs.contenido }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
