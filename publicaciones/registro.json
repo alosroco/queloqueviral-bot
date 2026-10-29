@@ -1110,5 +1110,29 @@
   "cta_seguir": true,
   "hora": "08:45",
   "youtube": "https://youtube.com/shorts/Tu5QbvMlEEI"
+ },
+ {
+  "fecha": "2026-10-29",
+  "titulo": "¿Tu perro se alinea con el norte al hacer pipí?",
+  "instagram": "https://www.instagram.com/reel/DfF5TMplbUG/",
+  "categoria": "ANIMALES",
+  "duracion": 42.1,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": true,
+  "hora": "17:44",
+  "youtube": "https://youtube.com/shorts/Pr36V3McRec"
  }
 ]
