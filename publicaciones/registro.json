@@ -1206,5 +1206,34 @@
   "cta_seguir": true,
   "hora": "17:44",
   "youtube": "https://youtube.com/shorts/Pr36V3McRec"
+ },
+ {
+  "ig_id": "18113812901465733",
+  "fecha": "2026-10-29",
+  "titulo": "¿Alguna vez tu gato te miró y cerró los ojos muy despacio?",
+  "instagram": "https://www.instagram.com/reel/DfGBGeekyNA/",
+  "categoria": "MASCOTAS",
+  "duracion": 40.0,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "18:52",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "gancho": "Si tu gato te parpadea despacio, quizá no sea sueño",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/NlwUmIrUYl8"
  }
 ]
