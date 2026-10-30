@@ -1289,5 +1289,34 @@
   "gancho": "Si tu gato te parpadea despacio, quizá no sea sueño",
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/NlwUmIrUYl8"
+ },
+ {
+  "ig_id": "18033776081856145",
+  "fecha": "2026-10-29",
+  "titulo": "¿Tu edulcorante 'sin azúcar' tiene relación con tu memoria?",
+  "instagram": "https://www.instagram.com/reel/DfGY_URk7XO/",
+  "categoria": "SALUD",
+  "duracion": 47.3,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "22:21",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "gancho": "¿Tu edulcorante 'sin azúcar' tiene relación con tu memoria?",
+  "plan": "salud y bienestar",
+  "youtube": "https://youtube.com/shorts/GIPB1uolS_I"
  }
 ]
