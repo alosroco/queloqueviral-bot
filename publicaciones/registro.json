@@ -361,7 +361,13 @@
   },
   "cta_seguir": false,
   "hora": "13:34",
-  "youtube": "https://youtube.com/shorts/DpKkmeN1uOU"
+  "youtube": "https://youtube.com/shorts/DpKkmeN1uOU",
+  "metricas": {
+   "yt_vistas": 332,
+   "yt_likes": 18,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 17
  },
  {
   "fecha": "2026-10-12",
@@ -409,7 +415,13 @@
   },
   "cta_seguir": true,
   "hora": "11:34",
-  "youtube": "https://youtube.com/shorts/SYhsKw5U3yE"
+  "youtube": "https://youtube.com/shorts/SYhsKw5U3yE",
+  "metricas": {
+   "yt_vistas": 7,
+   "yt_likes": 0,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 16
  },
  {
   "fecha": "2026-10-13",
@@ -481,7 +493,13 @@
   },
   "cta_seguir": true,
   "hora": "09:47",
-  "youtube": "https://youtube.com/shorts/IeZ9TY8AQO0"
+  "youtube": "https://youtube.com/shorts/IeZ9TY8AQO0",
+  "metricas": {
+   "yt_vistas": 1042,
+   "yt_likes": 33,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 15
  },
  {
   "fecha": "2026-10-15",
@@ -505,7 +523,13 @@
   },
   "cta_seguir": false,
   "hora": "09:49",
-  "youtube": "https://youtube.com/shorts/uIcpq9Er1Mg"
+  "youtube": "https://youtube.com/shorts/uIcpq9Er1Mg",
+  "metricas": {
+   "yt_vistas": 971,
+   "yt_likes": 16,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 14
  },
  {
   "fecha": "2026-10-16",
@@ -529,7 +553,13 @@
   },
   "cta_seguir": true,
   "hora": "14:38",
-  "youtube": "https://youtube.com/shorts/wEaxv1gLaT8"
+  "youtube": "https://youtube.com/shorts/wEaxv1gLaT8",
+  "metricas": {
+   "yt_vistas": 30,
+   "yt_likes": 0,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 13
  },
  {
   "fecha": "2026-10-17",
@@ -553,7 +583,13 @@
   },
   "cta_seguir": true,
   "hora": "10:19",
-  "youtube": "https://youtube.com/shorts/NJgCRs0qXOg"
+  "youtube": "https://youtube.com/shorts/NJgCRs0qXOg",
+  "metricas": {
+   "yt_vistas": 20,
+   "yt_likes": 0,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 12
  },
  {
   "fecha": "2026-10-17",
@@ -577,7 +613,13 @@
   },
   "cta_seguir": false,
   "hora": "12:09",
-  "youtube": "https://youtube.com/shorts/c9lNEzdgn_k"
+  "youtube": "https://youtube.com/shorts/c9lNEzdgn_k",
+  "metricas": {
+   "yt_vistas": 908,
+   "yt_likes": 40,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 12
  },
  {
   "fecha": "2026-10-17",
@@ -601,7 +643,13 @@
   },
   "cta_seguir": true,
   "hora": "12:33",
-  "youtube": "https://youtube.com/shorts/wHHPXZOsDP8"
+  "youtube": "https://youtube.com/shorts/wHHPXZOsDP8",
+  "metricas": {
+   "yt_vistas": 161,
+   "yt_likes": 2,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 12
  },
  {
   "fecha": "2026-10-18",
@@ -625,7 +673,13 @@
   },
   "cta_seguir": true,
   "hora": "12:12",
-  "youtube": "https://youtube.com/shorts/WGdib1FB2MI"
+  "youtube": "https://youtube.com/shorts/WGdib1FB2MI",
+  "metricas": {
+   "yt_vistas": 287,
+   "yt_likes": 10,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 11
  },
  {
   "fecha": "2026-10-18",
