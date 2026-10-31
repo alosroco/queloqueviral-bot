@@ -1053,7 +1053,13 @@
   },
   "cta_seguir": true,
   "hora": "08:36",
-  "youtube": "https://youtube.com/shorts/cm8vHf3gmeA"
+  "youtube": "https://youtube.com/shorts/cm8vHf3gmeA",
+  "metricas": {
+   "yt_vistas": 926,
+   "yt_likes": 11,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-24",
@@ -1077,7 +1083,13 @@
   },
   "cta_seguir": true,
   "hora": "12:29",
-  "youtube": "https://youtube.com/shorts/D5cj3hVS-AE"
+  "youtube": "https://youtube.com/shorts/D5cj3hVS-AE",
+  "metricas": {
+   "yt_vistas": 82,
+   "yt_likes": 1,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-24",
@@ -1091,7 +1103,13 @@
   "puntajes": {},
   "cta_seguir": false,
   "hora": "17:43",
-  "youtube": "https://youtube.com/shorts/wRiFT3sh7Ag"
+  "youtube": "https://youtube.com/shorts/wRiFT3sh7Ag",
+  "metricas": {
+   "yt_vistas": 399,
+   "yt_likes": 5,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-24",
@@ -1115,7 +1133,13 @@
   },
   "cta_seguir": false,
   "hora": "21:55",
-  "youtube": "https://youtube.com/shorts/dT-gpoOtyV4"
+  "youtube": "https://youtube.com/shorts/dT-gpoOtyV4",
+  "metricas": {
+   "yt_vistas": 985,
+   "yt_likes": 8,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-25",
