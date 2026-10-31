@@ -1443,5 +1443,34 @@
   "gancho": "Por qué un antibiótico no cura tu gripe",
   "plan": "medicamentos",
   "youtube": "https://youtube.com/shorts/pfVxqgO__fk"
+ },
+ {
+  "ig_id": "18136343590654731",
+  "fecha": "2026-10-31",
+  "titulo": "¿Ronronea de cariño o te está pidiendo algo?",
+  "instagram": "https://www.instagram.com/reel/DfKfphGlVZ6/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 39.4,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "12:36",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "gancho": "Tu gato ronronea, pero no siempre es felicidad",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/_ZM33OzcblU"
  }
 ]
