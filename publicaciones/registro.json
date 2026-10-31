@@ -1472,5 +1472,34 @@
   "gancho": "Tu gato ronronea, pero no siempre es felicidad",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/_ZM33OzcblU"
+ },
+ {
+  "ig_id": "18121426871078117",
+  "fecha": "2026-10-31",
+  "titulo": "¿Un cuervo decide el doble de rápido que tú?",
+  "instagram": "https://www.instagram.com/reel/DfLBpXOEUQD/",
+  "categoria": "ANIMALES",
+  "duracion": 49.6,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "17:33",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "gancho": "¿Un cuervo decide el doble de rápido que tú?",
+  "plan": "animales",
+  "youtube": "https://youtube.com/shorts/AaK2dhP-7gc"
  }
 ]
