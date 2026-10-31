@@ -1390,5 +1390,34 @@
   "gancho": "¿Tu edulcorante 'sin azúcar' tiene relación con tu memoria?",
   "plan": "salud y bienestar",
   "youtube": "https://youtube.com/shorts/GIPB1uolS_I"
+ },
+ {
+  "ig_id": "18414239458094168",
+  "fecha": "2026-10-30",
+  "titulo": "Lo que tu antibiótico no puede tocar cuando tienes gripe",
+  "instagram": "https://www.instagram.com/reel/DfI7Y9Blpj_/",
+  "categoria": "SALUD",
+  "duracion": 38.1,
+  "estilo_hook": "pregunta",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "21:59",
+  "estilo_titulo": "B",
+  "cta_tipo": "comentario",
+  "gancho": "Por qué un antibiótico no cura tu gripe",
+  "plan": "medicamentos",
+  "youtube": "https://youtube.com/shorts/pfVxqgO__fk"
  }
 ]
