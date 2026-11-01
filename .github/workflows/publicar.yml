@@ -14,7 +14,7 @@ on:
         description: "normal = pide aprobacion y publica | prueba = solo Telegram | tiktok_link / tiktok_token = conectar TikTok"
         default: "normal"
         type: choice
-        options: [normal, prueba, web, tiktok_link, tiktok_token]
+        options: [normal, prueba, youtube, web, tiktok_link, tiktok_token]
       contenido:
         description: "Que Reel armar"
         default: "mascotas"
