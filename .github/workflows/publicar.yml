@@ -17,9 +17,9 @@ on:
         options: [normal, prueba, web, tiktok_link, tiktok_token]
       contenido:
         description: "Que Reel armar"
-        default: "animales"
+        default: "mascotas"
         type: choice
-        options: [animales, mascotas, varios]
+        options: [mascotas, serie_mascota, vinculo, animales, varios]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
