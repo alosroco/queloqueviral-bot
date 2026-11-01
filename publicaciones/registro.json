@@ -1513,5 +1513,34 @@
   "gancho": "¿Un cuervo decide el doble de rápido que tú?",
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/AaK2dhP-7gc"
+ },
+ {
+  "ig_id": "18201763657340312",
+  "fecha": "2026-11-01",
+  "titulo": "Dejaste un suéter en la silla y tu gato armó su nido",
+  "instagram": "https://www.instagram.com/reel/DfNER27jbkb/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 40.3,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "12:35",
+  "estilo_titulo": "E",
+  "cta_tipo": "comentario",
+  "gancho": "¿Por qué tu gato se acuesta sobre tu ropa?",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/1IhzQYQ8sqY"
  }
 ]
