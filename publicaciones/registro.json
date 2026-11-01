@@ -1163,7 +1163,13 @@
   },
   "cta_seguir": false,
   "hora": "17:25",
-  "youtube": "https://youtube.com/shorts/g_bv7--qKso"
+  "youtube": "https://youtube.com/shorts/g_bv7--qKso",
+  "metricas": {
+   "yt_vistas": 1,
+   "yt_likes": 0,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-25",
@@ -1187,7 +1193,13 @@
   },
   "cta_seguir": false,
   "hora": "22:24",
-  "youtube": "https://youtube.com/shorts/5C3wTlDq4vs"
+  "youtube": "https://youtube.com/shorts/5C3wTlDq4vs",
+  "metricas": {
+   "yt_vistas": 595,
+   "yt_likes": 2,
+   "yt_comentarios": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-26",
