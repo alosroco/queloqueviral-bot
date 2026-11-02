@@ -1223,7 +1223,17 @@
   },
   "cta_seguir": true,
   "hora": "21:46",
-  "youtube": "https://youtube.com/shorts/iVL3E2GECXI"
+  "youtube": "https://youtube.com/shorts/iVL3E2GECXI",
+  "metricas": {
+   "yt_vistas": 117,
+   "yt_likes": 0,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 55.92,
+   "yt_seg_vistos": 23,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-27",
