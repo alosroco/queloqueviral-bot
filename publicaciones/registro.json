@@ -1643,5 +1643,35 @@
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/Eb0zKO5SWvE",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18148615051598850",
+  "fecha": "2026-11-02",
+  "titulo": "¿Tu perro te devuelve la pelota en vez de romperla?",
+  "instagram": "https://www.instagram.com/reel/DfPsRGnjmrJ/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 33.0,
+  "estilo_hook": "contraste",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "13:02",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro te trae la pelota o se la queda?",
+  "gancho": "Tu perro no persigue solo la pelota",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/mlFC2FpPbts"
  }
 ]
