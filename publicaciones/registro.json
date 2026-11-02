@@ -1612,5 +1612,35 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/n7XxqtLPE28",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18037120502883645",
+  "fecha": "2026-11-02",
+  "titulo": "Por qué tu perro grande vive menos podría estar en su ADN",
+  "instagram": "https://www.instagram.com/reel/DfPQbNeCIwG/",
+  "categoria": "MASCOTAS",
+  "duracion": 42.9,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "08:59",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro es grande o pequeño? Cuéntame cuántos años tiene.",
+  "gancho": "Por qué tu perro grande vive menos podría estar en su ADN",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/Eb0zKO5SWvE"
  }
 ]
