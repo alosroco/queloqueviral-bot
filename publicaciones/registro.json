@@ -1571,5 +1571,35 @@
   "gancho": "¿Por qué los cocodrilos sobrevivieron al asteroide?",
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/52sKr20-T04"
+ },
+ {
+  "ig_id": "17881396293553325",
+  "fecha": "2026-11-01",
+  "titulo": "Monos amigos de perros, cerdos y ciervos",
+  "instagram": "https://www.instagram.com/reel/DfOFcSxkiNE/",
+  "categoria": "MASCOTAS",
+  "duracion": 36.6,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 8,
+   "ritmo": 7,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "22:04",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tú crees que nuestro cariño por los animales es así de antiguo?",
+  "gancho": "Monos amigos de perros, cerdos y ciervos",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/n7XxqtLPE28"
  }
 ]
