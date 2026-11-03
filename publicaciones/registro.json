@@ -1684,5 +1684,35 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/mlFC2FpPbts",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18606199636067024",
+  "fecha": "2026-11-03",
+  "titulo": "Los perros de Chernóbil tienen un ADN distinto",
+  "instagram": "https://www.instagram.com/reel/DfR0czQDFOW/",
+  "categoria": "MASCOTAS",
+  "duracion": 38.9,
+  "estilo_hook": "dato",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 7,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "08:52",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tú crees que la evolución explica este ADN distinto?",
+  "gancho": "Los perros de Chernóbil tienen un ADN distinto",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/fIQtF-I7sc0"
  }
 ]
