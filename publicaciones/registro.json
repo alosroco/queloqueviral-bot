@@ -1281,7 +1281,17 @@
   },
   "cta_seguir": false,
   "hora": "17:38",
-  "youtube": "https://youtube.com/shorts/HOIxgqsmwRw"
+  "youtube": "https://youtube.com/shorts/HOIxgqsmwRw",
+  "metricas": {
+   "yt_vistas": 384,
+   "yt_likes": 12,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 47.71,
+   "yt_seg_vistos": 19,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-28",
