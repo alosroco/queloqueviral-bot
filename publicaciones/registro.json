@@ -1715,5 +1715,35 @@
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/fIQtF-I7sc0",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18123108431073900",
+  "fecha": "2026-11-03",
+  "titulo": "Por qué tu perro inclina la cabeza cuando le hablas",
+  "instagram": "https://www.instagram.com/reel/DfSQ1bOH6CM/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 40.6,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "13:01",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro ladea la cabeza si nombras su juguete favorito? Cuéntamelo en los comentarios.",
+  "gancho": "Por qué tu perro inclina la cabeza cuando le hablas",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/E_yCZ1r-ITk"
  }
 ]
