@@ -1746,5 +1746,35 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/E_yCZ1r-ITk",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18115610312117721",
+  "fecha": "2026-11-03",
+  "titulo": "¿Y si acariciar a tu perro te prepara para el próximo estrés?",
+  "instagram": "https://www.instagram.com/reel/DfTOvr7DXWc/",
+  "categoria": "MASCOTAS",
+  "duracion": 38.1,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "22:01",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro te ayuda cuando tienes un mal día?",
+  "gancho": "Acariciar a tu perro no te calma más rápido, pero hace otra cosa",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/hnNFgGg80C8"
  }
 ]
