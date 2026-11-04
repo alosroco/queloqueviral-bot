@@ -1797,5 +1797,35 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/hnNFgGg80C8",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "17953906143049035",
+  "fecha": "2026-11-04",
+  "titulo": "¿Tu gato deja presas en casa aunque come bien?",
+  "instagram": "https://www.instagram.com/reel/DfU6VoFCQJZ/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 38.3,
+  "estilo_hook": "pregunta",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "13:41",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu gato te ha dejado alguna vez una sorpresa así? Cuéntamelo en los comentarios.",
+  "gancho": "¿Por qué tu gato te trae animales a casa?",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/fXatXkNdJwM"
  }
 ]
