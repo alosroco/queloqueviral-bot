@@ -1880,5 +1880,35 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/fXatXkNdJwM",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "17963882529011209",
+  "fecha": "2026-11-05",
+  "titulo": "Los pájaros huyen antes de las mujeres, y los científicos no saben por qué",
+  "instagram": "https://www.instagram.com/reel/DfYA9ixiOSy/",
+  "categoria": "ANIMALES",
+  "duracion": 35.2,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "18:37",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Qué crees tú que ven las aves para reaccionar así?",
+  "gancho": "Los pájaros huyen antes de las mujeres, y los científicos no saben por qué",
+  "plan": "animales",
+  "youtube": "https://youtube.com/shorts/w6e93Q3WQ3c"
  }
 ]
