@@ -1383,7 +1383,17 @@
   },
   "cta_seguir": true,
   "hora": "08:45",
-  "youtube": "https://youtube.com/shorts/Tu5QbvMlEEI"
+  "youtube": "https://youtube.com/shorts/Tu5QbvMlEEI",
+  "metricas": {
+   "yt_vistas": 985,
+   "yt_likes": 30,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 69.88,
+   "yt_seg_vistos": 25,
+   "yt_suscriptores": 3,
+   "yt_compartidos": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "fecha": "2026-10-29",
@@ -1407,7 +1417,17 @@
   },
   "cta_seguir": true,
   "hora": "17:44",
-  "youtube": "https://youtube.com/shorts/Pr36V3McRec"
+  "youtube": "https://youtube.com/shorts/Pr36V3McRec",
+  "metricas": {
+   "yt_vistas": 1069,
+   "yt_likes": 15,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 35.96,
+   "yt_seg_vistos": 15,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18113812901465733",
@@ -1436,7 +1456,23 @@
   "cta_tipo": "comentario",
   "gancho": "Si tu gato te parpadea despacio, quizá no sea sueño",
   "plan": "mascotas",
-  "youtube": "https://youtube.com/shorts/NlwUmIrUYl8"
+  "youtube": "https://youtube.com/shorts/NlwUmIrUYl8",
+  "metricas": {
+   "yt_vistas": 1300,
+   "yt_likes": 80,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 80.83,
+   "yt_seg_vistos": 33,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 3,
+   "ig_likes": 3,
+   "ig_comentarios": 0,
+   "ig_vistas": 29,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 10.0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18033776081856145",
@@ -1465,7 +1501,23 @@
   "cta_tipo": "comentario",
   "gancho": "¿Tu edulcorante 'sin azúcar' tiene relación con tu memoria?",
   "plan": "salud y bienestar",
-  "youtube": "https://youtube.com/shorts/GIPB1uolS_I"
+  "youtube": "https://youtube.com/shorts/GIPB1uolS_I",
+  "metricas": {
+   "yt_vistas": 21,
+   "yt_likes": 0,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 77.29,
+   "yt_seg_vistos": 37,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 125,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 3.7
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18414239458094168",
