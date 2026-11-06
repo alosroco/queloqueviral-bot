@@ -1546,7 +1546,23 @@
   "cta_tipo": "comentario",
   "gancho": "Por qué un antibiótico no cura tu gripe",
   "plan": "medicamentos",
-  "youtube": "https://youtube.com/shorts/pfVxqgO__fk"
+  "youtube": "https://youtube.com/shorts/pfVxqgO__fk",
+  "metricas": {
+   "yt_vistas": 69,
+   "yt_likes": 0,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 51.2,
+   "yt_seg_vistos": 19,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 11,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 2.8
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18136343590654731",
