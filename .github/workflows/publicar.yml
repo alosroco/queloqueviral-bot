@@ -14,7 +14,7 @@ on:
         description: "normal = pide aprobacion y publica | prueba = solo Telegram | tiktok_link / tiktok_token = conectar TikTok"
         default: "normal"
         type: choice
-        options: [normal, prueba, youtube, web, tiktok_link, tiktok_token]
+        options: [normal, prueba, voces, youtube, web, tiktok_link, tiktok_token]
       contenido:
         description: "Que Reel armar"
         default: "mascotas"
@@ -35,7 +35,7 @@ concurrency:
 
 jobs:
   publicar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04      # version fija: evita sorpresas cuando GitHub cambie ubuntu-latest
     timeout-minutes: 80
     environment:
       name: github-pages
@@ -65,8 +65,8 @@ jobs:
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
       CONTENIDO: ${{ github.event_name == 'schedule' && 'interes' || github.event.inputs.contenido }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core > /dev/null
