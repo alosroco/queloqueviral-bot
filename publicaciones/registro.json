@@ -1959,5 +1959,35 @@
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/w6e93Q3WQ3c",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18159988498511016",
+  "fecha": "2026-11-07",
+  "titulo": "¿Has visto sus ojos húmedos cuando llegas a casa?",
+  "instagram": "https://www.instagram.com/reel/DfcgPA5DLPW/",
+  "categoria": "MASCOTAS",
+  "duracion": 41.3,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 7,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "12:27",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro te recibe así cuando llegas? Cuéntamelo en los comentarios.",
+  "gancho": "Algo les pasa a los ojos de tu perro cuando vuelves",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/z-4unHiPUXc"
  }
 ]
