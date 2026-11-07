@@ -1990,5 +1990,37 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/z-4unHiPUXc",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18108233495343818",
+  "fecha": "2026-11-07",
+  "titulo": "Tu perro no tiene la edad que crees",
+  "instagram": "https://www.instagram.com/reel/Dfctj8nicAm/",
+  "categoria": "Perros",
+  "duracion": 40.9,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "14:24",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Cuántos años humanos tendría tu perro con esta fórmula? Cuéntame en los comentarios.",
+  "tono": "alegre",
+  "voz": "Alonso",
+  "gancho": "Tu perro no tiene la edad que crees",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/rbqvE-Y6AAI"
  }
 ]
