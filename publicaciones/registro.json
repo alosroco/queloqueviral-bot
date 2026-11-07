@@ -1591,7 +1591,23 @@
   "cta_tipo": "comentario",
   "gancho": "Tu gato ronronea, pero no siempre es felicidad",
   "plan": "por que mi mascota",
-  "youtube": "https://youtube.com/shorts/_ZM33OzcblU"
+  "youtube": "https://youtube.com/shorts/_ZM33OzcblU",
+  "metricas": {
+   "yt_vistas": 1064,
+   "yt_likes": 57,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 108.02000000000001,
+   "yt_seg_vistos": 43,
+   "yt_suscriptores": 3,
+   "yt_compartidos": 0,
+   "ig_likes": 7,
+   "ig_comentarios": 0,
+   "ig_vistas": 164,
+   "ig_compartidos": 1,
+   "ig_guardados": 3,
+   "ig_seg_vistos": 7.1
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18121426871078117",
@@ -1620,7 +1636,23 @@
   "cta_tipo": "comentario",
   "gancho": "¿Un cuervo decide el doble de rápido que tú?",
   "plan": "animales",
-  "youtube": "https://youtube.com/shorts/AaK2dhP-7gc"
+  "youtube": "https://youtube.com/shorts/AaK2dhP-7gc",
+  "metricas": {
+   "yt_vistas": 1178,
+   "yt_likes": 58,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 57.53,
+   "yt_seg_vistos": 28,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 1,
+   "ig_likes": 2,
+   "ig_comentarios": 0,
+   "ig_vistas": 122,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 7.2
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18201763657340312",
