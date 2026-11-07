@@ -2023,5 +2023,37 @@
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/rbqvE-Y6AAI",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "17874273384642496",
+  "fecha": "2026-11-07",
+  "titulo": "Estas polillas despistan a los murciélagos con sus genitales",
+  "instagram": "https://www.instagram.com/reel/Dfc7aM7HAZG/",
+  "categoria": "Mundo animal",
+  "duracion": 39.5,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "16:25",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Y tú qué crees: truco de seducción o de defensa?",
+  "tono": "alegre",
+  "voz": "Alonso",
+  "gancho": "Estas polillas despistan a los murciélagos con sus genitales",
+  "plan": "animales",
+  "youtube": "https://youtube.com/shorts/BpAtWJOjvX8"
  }
 ]
