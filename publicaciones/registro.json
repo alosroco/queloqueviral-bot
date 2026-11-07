@@ -2055,5 +2055,37 @@
   "gancho": "Estas polillas despistan a los murciélagos con sus genitales",
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/BpAtWJOjvX8"
+ },
+ {
+  "ig_id": "18004274574008677",
+  "fecha": "2026-11-07",
+  "titulo": "¿Tu perro reacciona cuando dices ciertas palabras?",
+  "instagram": "https://www.instagram.com/reel/DfdYU1Ok4rn/",
+  "categoria": "Mascotas y personas",
+  "duracion": 36.3,
+  "estilo_hook": "misterio",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 9,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "20:37",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Qué palabra reconoce tu perro además de su nombre?",
+  "tono": "alegre",
+  "voz": "Alonso",
+  "gancho": "¿Tu perro te entiende por un sonido de tus palabras?",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/txpc6y4uUFU"
  }
 ]
