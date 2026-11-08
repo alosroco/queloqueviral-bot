@@ -2170,5 +2170,37 @@
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/Jd0Xlxc89R4",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "17966399394233684",
+  "fecha": "2026-11-08",
+  "titulo": "Lo que tu gato nota de ti aunque parezca distante",
+  "instagram": "https://www.instagram.com/reel/Dff80FMki2A/",
+  "categoria": "Mascotas y personas",
+  "duracion": 35.6,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "20:35",
+  "estilo_titulo": "B",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu gato te ignora de verdad o solo disimula? Cuéntamelo en los comentarios.",
+  "tono": "",
+  "voz": "Jorge",
+  "gancho": "Tu gato parece ignorarte, pero su cuerpo podría estar siguiéndote el ritmo",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/RlzolIfnEos"
  }
 ]
