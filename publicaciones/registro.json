@@ -1681,7 +1681,23 @@
   "cta_tipo": "comentario",
   "gancho": "¿Por qué tu gato se acuesta sobre tu ropa?",
   "plan": "por que mi mascota",
-  "youtube": "https://youtube.com/shorts/1IhzQYQ8sqY"
+  "youtube": "https://youtube.com/shorts/1IhzQYQ8sqY",
+  "metricas": {
+   "yt_vistas": 1151,
+   "yt_likes": 101,
+   "yt_comentarios": 3,
+   "yt_pct_visto": 91.72,
+   "yt_seg_vistos": 37,
+   "yt_suscriptores": 2,
+   "yt_compartidos": 1,
+   "ig_likes": 5,
+   "ig_comentarios": 0,
+   "ig_vistas": 110,
+   "ig_compartidos": 0,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 4.6
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17918442498261680",
@@ -1710,7 +1726,23 @@
   "cta_tipo": "comentario",
   "gancho": "¿Por qué los cocodrilos sobrevivieron al asteroide?",
   "plan": "animales",
-  "youtube": "https://youtube.com/shorts/52sKr20-T04"
+  "youtube": "https://youtube.com/shorts/52sKr20-T04",
+  "metricas": {
+   "yt_vistas": 1004,
+   "yt_likes": 34,
+   "yt_comentarios": 0,
+   "yt_pct_visto": 81.89,
+   "yt_seg_vistos": 36,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 141,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 6.6
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17881396293553325",
@@ -1741,7 +1773,23 @@
   "gancho": "Monos amigos de perros, cerdos y ciervos",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/n7XxqtLPE28",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1033,
+   "yt_likes": 48,
+   "yt_comentarios": 2,
+   "yt_pct_visto": 55.779999999999994,
+   "yt_seg_vistos": 20,
+   "yt_suscriptores": 3,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 113,
+   "ig_compartidos": 0,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 6.1
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18037120502883645",
