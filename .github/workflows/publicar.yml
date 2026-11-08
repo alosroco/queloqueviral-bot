@@ -2,10 +2,10 @@ name: QueloQue Viral
 
 on:
   schedule:
-    - cron: "7 11 * * *"    # 08:07 Argentina - mascotas (perros, gatos)
+    - cron: "7 11 * * *"    # 08:07 Argentina - historias de amor entre mascotas y personas
     - cron: "7 15 * * *"    # 12:07 Argentina - serie ¿Por qué mi mascota?
-    - cron: "7 20 * * *"    # 17:07 Argentina - animales extraordinarios y naturaleza
-    - cron: "7 0 * * *"     # 21:07 Argentina - rotacion de prioridades
+    - cron: "7 20 * * *"    # 17:07 Argentina - mascotas: perros y gatos
+    - cron: "7 0 * * *"     # 21:07 Argentina - historias de amor entre mascotas y personas
     # (minuto 7: las horas en punto son las mas congestionadas de GitHub)
     # Que se publica en cada horario se configura en PLAN_DIARIO, dentro de noticias_bot.py
   workflow_dispatch:        # boton para correrlo a mano
