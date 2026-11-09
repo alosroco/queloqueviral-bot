@@ -1820,7 +1820,23 @@
   "gancho": "Por qué tu perro grande vive menos podría estar en su ADN",
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/Eb0zKO5SWvE",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1029,
+   "yt_likes": 48,
+   "yt_comentarios": 2,
+   "yt_pct_visto": 47.5,
+   "yt_seg_vistos": 20,
+   "yt_suscriptores": 2,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 4,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 13.9
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18148615051598850",
@@ -1851,7 +1867,23 @@
   "gancho": "Tu perro no persigue solo la pelota",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/mlFC2FpPbts",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1081,
+   "yt_likes": 38,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 49.06,
+   "yt_seg_vistos": 16,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 120,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 5.6
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18606199636067024",
