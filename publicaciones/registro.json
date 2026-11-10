@@ -2235,5 +2235,37 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/RlzolIfnEos",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18109658675354608",
+  "fecha": "2026-11-09",
+  "titulo": "¿Por qué tu perro se acerca justo cuando estás triste?",
+  "instagram": "https://www.instagram.com/reel/Dfi3DtJjbBq/",
+  "categoria": "Mascotas y personas",
+  "duracion": 34.1,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 9,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "23:41",
+  "estilo_titulo": "A",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro se te acerca cuando estás mal?",
+  "tono": "emotivo",
+  "voz": "Jorge",
+  "gancho": "¿Tu perro nota algo que tú no le has dicho?",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/iucEPvPYTrM"
  }
 ]
