@@ -1914,7 +1914,23 @@
   "gancho": "Los perros de Chernóbil tienen un ADN distinto",
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/fIQtF-I7sc0",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1053,
+   "yt_likes": 44,
+   "yt_comentarios": 3,
+   "yt_pct_visto": 66.55,
+   "yt_seg_vistos": 25,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 3,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 1.6
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18123108431073900",
@@ -1945,7 +1961,23 @@
   "gancho": "Por qué tu perro inclina la cabeza cuando le hablas",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/E_yCZ1r-ITk",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 838,
+   "yt_likes": 32,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 63.57000000000001,
+   "yt_seg_vistos": 26,
+   "yt_suscriptores": 2,
+   "yt_compartidos": 0,
+   "ig_likes": 3,
+   "ig_comentarios": 0,
+   "ig_vistas": 115,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 5.1
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18115610312117721",
@@ -1976,7 +2008,23 @@
   "gancho": "Acariciar a tu perro no te calma más rápido, pero hace otra cosa",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/hnNFgGg80C8",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1017,
+   "yt_likes": 52,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 94.66,
+   "yt_seg_vistos": 36,
+   "yt_suscriptores": 2,
+   "yt_compartidos": 0,
+   "ig_likes": 2,
+   "ig_comentarios": 0,
+   "ig_vistas": 109,
+   "ig_compartidos": 0,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 5.9
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17953906143049035",
