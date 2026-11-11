@@ -2,11 +2,12 @@ name: QueloQue Viral
 
 on:
   schedule:
-    - cron: "7 11 * * *"    # 08:07 Argentina - historias de amor entre mascotas y personas
-    - cron: "7 15 * * *"    # 12:07 Argentina - serie ¿Por qué mi mascota?
-    - cron: "7 20 * * *"    # 17:07 Argentina - mascotas: perros y gatos
-    - cron: "7 0 * * *"     # 21:07 Argentina - historias de amor entre mascotas y personas
-    # (minuto 7: las horas en punto son las mas congestionadas de GitHub)
+    # Minutos poco congestionados en GitHub. El de la noche va a las 20:47 para no caer en la
+    # medianoche UTC (21:00 de Argentina), la hora de mas trafico: ahi GitHub demora las corridas horas.
+    - cron: "17 11 * * *"   # 08:17 Argentina - historias de amor entre mascotas y personas
+    - cron: "17 15 * * *"   # 12:17 Argentina - serie ¿Por qué mi mascota?
+    - cron: "17 20 * * *"   # 17:17 Argentina - mascotas: perros y gatos
+    - cron: "47 23 * * *"   # 20:47 Argentina - historias de amor entre mascotas y personas
     # Que se publica en cada horario se configura en PLAN_DIARIO, dentro de noticias_bot.py
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
@@ -64,6 +65,7 @@ jobs:
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
       CONTENIDO: ${{ github.event_name == 'schedule' && 'interes' || github.event.inputs.contenido }}
+      PROGRAMADA: ${{ github.event.schedule }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
