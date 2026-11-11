@@ -2055,7 +2055,23 @@
   "gancho": "¿Por qué tu gato te trae animales a casa?",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/fXatXkNdJwM",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1042,
+   "yt_likes": 69,
+   "yt_comentarios": 2,
+   "yt_pct_visto": 77.89,
+   "yt_seg_vistos": 30,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 13,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 2.3
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17963882529011209",
