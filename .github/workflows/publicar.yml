@@ -71,7 +71,16 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core > /dev/null
+      - name: Instalar ffmpeg (con reintentos si fallan los servidores de Ubuntu)
+        run: |
+          for intento in 1 2 3; do
+            if sudo apt-get update -qq && sudo apt-get install -y -qq --fix-missing ffmpeg fonts-dejavu-core > /dev/null; then
+              exit 0
+            fi
+            echo "La instalacion fallo (intento $intento de 3). Reintento en 30 segundos..."
+            sleep 30
+          done
+          exit 1
       - run: pip install -q -r requirements.txt
       - name: Tipografia de la marca (Poppins)
         run: |
