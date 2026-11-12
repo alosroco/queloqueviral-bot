@@ -2348,5 +2348,37 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/iucEPvPYTrM",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18126251183286370",
+  "fecha": "2026-11-12",
+  "titulo": "Tu gato te maúlla unas 4 veces más si pasa esto",
+  "instagram": "https://www.instagram.com/reel/DfppMWIEjZ8/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 38.2,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 8,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "14:56",
+  "estilo_titulo": "B",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Qué crees que te pide tu gato cuando te maúlla?",
+  "tono": "",
+  "voz": "Jorge",
+  "gancho": "Tu gato casi no le maúlla así a otros gatos",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/Nzk8oeOE7O0"
  }
 ]
