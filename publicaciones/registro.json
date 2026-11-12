@@ -2102,7 +2102,23 @@
   "gancho": "Los pájaros huyen antes de las mujeres, y los científicos no saben por qué",
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/w6e93Q3WQ3c",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1183,
+   "yt_likes": 21,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 74.35,
+   "yt_seg_vistos": 26,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 2,
+   "ig_comentarios": 0,
+   "ig_vistas": 126,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 8.0
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18159988498511016",
