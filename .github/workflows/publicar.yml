@@ -2,13 +2,11 @@ name: QueloQue Viral
 
 on:
   schedule:
-    # Minutos poco congestionados en GitHub. El de la noche va a las 20:47 para no caer en la
-    # medianoche UTC (21:00 de Argentina), la hora de mas trafico: ahi GitHub demora las corridas horas.
-    - cron: "17 11 * * *"   # 08:17 Argentina - historias de amor entre mascotas y personas
-    - cron: "17 15 * * *"   # 12:17 Argentina - serie ¿Por qué mi mascota?
-    - cron: "17 20 * * *"   # 17:17 Argentina - mascotas: perros y gatos
-    - cron: "47 23 * * *"   # 20:47 Argentina - historias de amor entre mascotas y personas
-    # Que se publica en cada horario se configura en PLAN_DIARIO, dentro de noticias_bot.py
+    # GitHub demora o saltea corridas, asi que lo intenta CADA HORA de 8 a 23 (Argentina). El bot arma solo
+    # el turno que corresponde y todavia no salio (8:17, 12:17, 17:17 y 20:47); si ya salio, termina enseguida.
+    - cron: "17 11-23 * * *"   # 08:17 a 20:17 Argentina
+    - cron: "47 23 * * *"      # 20:47 Argentina
+    - cron: "17 0-2 * * *"     # 21:17 a 23:17 Argentina
   workflow_dispatch:        # boton para correrlo a mano
     inputs:
       modo:
