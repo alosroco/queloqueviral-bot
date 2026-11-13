@@ -1,9 +1,10 @@
 name: QueloQue Viral
 
 on:
+  # Los turnos (8:17, 12:17, 17:17 y 20:47) los dispara el RELEVO (job de abajo) a la hora exacta: espera,
+  # lanza el Reel y se vuelve a disparar a si mismo. El programador de GitHub queda solo como respaldo
+  # (demora o saltea corridas): si el relevo se cortara, la proxima corrida programada lo reinicia.
   schedule:
-    # GitHub demora o saltea corridas, asi que lo intenta CADA HORA de 8 a 23 (Argentina). El bot arma solo
-    # el turno que corresponde y todavia no salio (8:17, 12:17, 17:17 y 20:47); si ya salio, termina enseguida.
     - cron: "17 11-23 * * *"   # 08:17 a 20:17 Argentina
     - cron: "47 23 * * *"      # 20:47 Argentina
     - cron: "17 0-2 * * *"     # 21:17 a 23:17 Argentina
@@ -13,12 +14,12 @@ on:
         description: "normal = pide aprobacion y publica | prueba = solo Telegram | tiktok_link / tiktok_token = conectar TikTok"
         default: "normal"
         type: choice
-        options: [normal, prueba, voces, youtube, web, tiktok_link, tiktok_token]
+        options: [normal, prueba, relevo, voces, youtube, web, tiktok_link, tiktok_token]
       contenido:
         description: "Que Reel armar"
         default: "mascotas"
         type: choice
-        options: [mascotas, serie_mascota, vinculo, animales, varios]
+        options: [mascotas, serie_mascota, vinculo, animales, varios, turno]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -28,14 +29,48 @@ permissions:
   contents: write
   pages: write
   id-token: write
-
-concurrency:
-  group: resumen-viral
+  actions: write            # para que el relevo pueda lanzar las corridas
 
 jobs:
+  relevo:
+    # Espera hasta el proximo turno, lo dispara y le pasa la posta a un relevo nuevo (cadena que no se corta).
+    if: github.event_name == 'schedule' || github.event.inputs.modo == 'relevo'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    concurrency:
+      group: relevo
+    steps:
+      - name: Esperar el proximo turno y dispararlo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SEG=$(python3 -c "
+          from datetime import datetime, timedelta, timezone
+          ar = timezone(timedelta(hours=-3)); ahora = datetime.now(ar)
+          turnos = [(8, 17), (12, 17), (17, 17), (20, 47)]
+          prox = min((ahora + timedelta(days=d)).replace(hour=h, minute=m, second=0, microsecond=0)
+                     for d in (0, 1) for h, m in turnos
+                     if (ahora + timedelta(days=d)).replace(hour=h, minute=m, second=0, microsecond=0) > ahora)
+          print(int((prox - ahora).total_seconds()))
+          ")
+          LIMITE=$((330 * 60))
+          if [ "$SEG" -le "$LIMITE" ]; then
+            echo "Proximo turno en $((SEG / 60)) minutos: espero y lo disparo."
+            sleep "$SEG"
+            gh workflow run publicar.yml --repo "$GITHUB_REPOSITORY" -f modo=normal -f contenido=turno
+            sleep 120
+          else
+            echo "El proximo turno esta lejos: espero 5 horas y media y paso la posta."
+            sleep "$LIMITE"
+          fi
+          gh workflow run publicar.yml --repo "$GITHUB_REPOSITORY" -f modo=relevo
+
   publicar:
+    if: github.event.inputs.modo != 'relevo'
     runs-on: ubuntu-24.04      # version fija: evita sorpresas cuando GitHub cambie ubuntu-latest
     timeout-minutes: 80
+    concurrency:
+      group: resumen-viral
     environment:
       name: github-pages
     env:
@@ -62,8 +97,8 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
       TIKTOK_CODIGO: ${{ github.event.inputs.codigo }}
-      CONTENIDO: ${{ github.event_name == 'schedule' && 'interes' || github.event.inputs.contenido }}
-      PROGRAMADA: ${{ github.event.schedule }}
+      CONTENIDO: ${{ (github.event_name == 'schedule' || github.event.inputs.contenido == 'turno') && 'interes' || github.event.inputs.contenido }}
+      PROGRAMADA: ${{ github.event.schedule || (github.event.inputs.contenido == 'turno' && 'relevo' || '') }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
