@@ -2478,5 +2478,37 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/oluCvnyKy0Y",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "17915987664561901",
+  "fecha": "2026-11-14",
+  "titulo": "Tu perro no decide mover esa pata",
+  "instagram": "https://www.instagram.com/reel/DfuvrdLEaJx/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 35.9,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "14:28",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro también patalea así?",
+  "tono": "alegre",
+  "voz": "Jorge",
+  "gancho": "Tu perro no decide mover esa pata",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/AW861UVpqKo"
  }
 ]
