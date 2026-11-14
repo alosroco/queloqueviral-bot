@@ -2149,7 +2149,23 @@
   "gancho": "Algo les pasa a los ojos de tu perro cuando vuelves",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/z-4unHiPUXc",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1054,
+   "yt_likes": 28,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 47.71,
+   "yt_seg_vistos": 20,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 4,
+   "ig_comentarios": 0,
+   "ig_vistas": 111,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 4.2
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18108233495343818",
@@ -2182,7 +2198,23 @@
   "gancho": "Tu perro no tiene la edad que crees",
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/rbqvE-Y6AAI",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1009,
+   "yt_likes": 19,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 61.65999999999999,
+   "yt_seg_vistos": 25,
+   "yt_suscriptores": 2,
+   "yt_compartidos": 4,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 5,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 1.3
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17874273384642496",
@@ -2215,7 +2247,23 @@
   "gancho": "Estas polillas despistan a los murciélagos con sus genitales",
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/BpAtWJOjvX8",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1024,
+   "yt_likes": 13,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 49.55,
+   "yt_seg_vistos": 19,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 4,
+   "ig_comentarios": 0,
+   "ig_vistas": 292,
+   "ig_compartidos": 1,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 10.1
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18004274574008677",
@@ -2248,7 +2296,23 @@
   "gancho": "¿Tu perro te entiende por un sonido de tus palabras?",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/txpc6y4uUFU",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1024,
+   "yt_likes": 41,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 60.47,
+   "yt_seg_vistos": 22,
+   "yt_suscriptores": 2,
+   "yt_compartidos": 1,
+   "ig_likes": 4,
+   "ig_comentarios": 0,
+   "ig_vistas": 130,
+   "ig_compartidos": 0,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 5.5
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18418296970084057",
