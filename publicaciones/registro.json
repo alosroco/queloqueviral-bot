@@ -2511,5 +2511,37 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/AW861UVpqKo",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18244517323315243",
+  "fecha": "2026-11-14",
+  "titulo": "Perdió su vuelo y volvió con alguien más",
+  "instagram": "https://www.instagram.com/reel/DfvbXPRIXP5/",
+  "categoria": "Mascotas y personas",
+  "duracion": 35.0,
+  "estilo_hook": "contraste",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 7,
+   "curiosidad": 7,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 6,
+   "seguidores": 6,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "20:51",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu mascota llegó sin que la buscaras?",
+  "tono": "alegre",
+  "voz": "Jorge",
+  "gancho": "Perdió su vuelo y volvió con alguien más",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/ULiqBcaWBCY"
  }
 ]
