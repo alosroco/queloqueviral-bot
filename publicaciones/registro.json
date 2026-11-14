@@ -2445,5 +2445,37 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/Nzk8oeOE7O0",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18169714354468636",
+  "fecha": "2026-11-14",
+  "titulo": "Tu perro puede copiarte el bostezo. ¿Por qué?",
+  "instagram": "https://www.instagram.com/reel/DfuNUdpgsTB/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 42.2,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 9,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "09:28",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Y a ti, tu perro te copia los bostezos?",
+  "tono": "alegre",
+  "voz": "Alonso",
+  "gancho": "Tu perro puede copiarte el bostezo. ¿Por qué?",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/oluCvnyKy0Y"
  }
 ]
