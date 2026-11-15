@@ -2345,7 +2345,23 @@
   "gancho": "Este animal pudo nacer en tiempos de Shakespeare",
   "plan": "animales",
   "youtube": "https://youtube.com/shorts/Jd0Xlxc89R4",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 363,
+   "yt_likes": 8,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 53.81,
+   "yt_seg_vistos": 21,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 21,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 7.3
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17966399394233684",
@@ -2378,7 +2394,23 @@
   "gancho": "Tu gato parece ignorarte, pero su cuerpo podría estar siguiéndote el ritmo",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/RlzolIfnEos",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 1105,
+   "yt_likes": 43,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 111.23,
+   "yt_seg_vistos": 40,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 20,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 5.7
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18109658675354608",
