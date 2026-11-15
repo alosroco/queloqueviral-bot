@@ -2609,5 +2609,37 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/UMQqK4HDHrM",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18111119905944864",
+  "fecha": "2026-11-15",
+  "titulo": "¿Dormir con tu perro te quita el sueño?",
+  "instagram": "https://www.instagram.com/reel/DfxogSpgTAb/",
+  "categoria": "Mascotas",
+  "duracion": 35.4,
+  "estilo_hook": "contraste",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 7,
+   "retencion": 7,
+   "claridad": 8,
+   "ritmo": 7,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "17:23",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Y tú, dejarías a tu perro fuera de la cama por un poco más de sueño?",
+  "tono": "",
+  "voz": "Alonso",
+  "gancho": "¿Dormir con tu perro te quita el sueño?",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/4A1LCs2ZQ4k"
  }
 ]
