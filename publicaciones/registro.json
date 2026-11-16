@@ -2691,5 +2691,37 @@
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/RbSGmlUL2Ao",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18481986241112253",
+  "fecha": "2026-11-16",
+  "titulo": "Su perra no se despegaba del bebé y su dueña cree que lo salvó 🐶",
+  "instagram": "https://www.instagram.com/reel/DfzPTuxgauM/",
+  "categoria": "Mascotas y personas",
+  "duracion": 34.4,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "08:22",
+  "estilo_titulo": "E",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro alguna vez te avisó que algo pasaba?",
+  "tono": "emotiva",
+  "voz": "Jorge",
+  "gancho": "Su perra lloraba sin parar y su dueña no entendía por qué",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/Wz86bf6dPTM"
  }
 ]
