@@ -2443,7 +2443,23 @@
   "gancho": "¿Tu perro nota algo que tú no le has dicho?",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/iucEPvPYTrM",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 520,
+   "yt_likes": 23,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 53.790000000000006,
+   "yt_seg_vistos": 18,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 4,
+   "ig_comentarios": 0,
+   "ig_vistas": 119,
+   "ig_compartidos": 0,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 2.4
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18126251183286370",
