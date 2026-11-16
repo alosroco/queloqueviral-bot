@@ -2756,5 +2756,37 @@
   "gancho": "Tu cara dice una cosa y tu voz otra",
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/wP-GD3dGUuQ"
+ },
+ {
+  "ig_id": "18140782966653893",
+  "fecha": "2026-11-16",
+  "titulo": "Volvió a donde lo adoptaron y reconoció a sus cuidadoras",
+  "instagram": "https://www.instagram.com/reel/Df0lbyJiM9S/",
+  "categoria": "Mascotas y personas",
+  "duracion": 34.8,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 8
+  },
+  "cta_seguir": false,
+  "hora": "20:55",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu mascota te reconocería después de años? Cuéntamelo en los comentarios.",
+  "tono": "emotiva",
+  "voz": "Jorge",
+  "gancho": "Volvió a donde lo adoptaron y reconoció a sus cuidadoras",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/nAtrRUj0OsE"
  }
 ]
