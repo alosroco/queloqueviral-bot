@@ -2642,5 +2642,37 @@
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/4A1LCs2ZQ4k",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "17957939709269380",
+  "fecha": "2026-11-15",
+  "titulo": "Mira hacia qué lado mueve la cola tu perro",
+  "instagram": "https://www.instagram.com/reel/DfyBx8yFGNU/",
+  "categoria": "¿Por qué mi mascota?",
+  "duracion": 31.0,
+  "estilo_hook": "misterio",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 7,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "21:04",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro mueve más la cola hacia un lado?",
+  "tono": "alegre",
+  "voz": "Jorge",
+  "gancho": "Mira hacia qué lado mueve la cola tu perro",
+  "plan": "por que mi mascota",
+  "youtube": "https://youtube.com/shorts/RbSGmlUL2Ao"
  }
 ]
