@@ -2724,5 +2724,37 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/Wz86bf6dPTM",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18118959446010200",
+  "fecha": "2026-11-16",
+  "titulo": "Tu cara dice una cosa y tu voz otra",
+  "instagram": "https://www.instagram.com/reel/Df0M5FDkb2m/",
+  "categoria": "Perros",
+  "duracion": 31.2,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 7,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "17:20",
+  "estilo_titulo": "",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro te ha mirado raro cuando fingías estar bien?",
+  "tono": "alegre",
+  "voz": "Jorge",
+  "gancho": "Tu cara dice una cosa y tu voz otra",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/wP-GD3dGUuQ"
  }
 ]
