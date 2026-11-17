@@ -1,9 +1,10 @@
 name: QueloQue Viral
+run-name: ${{ github.event.inputs.modo == 'relevo' && 'Relevo (espera el proximo turno)' || 'QueloQue Viral' }}
 
 on:
   # Los turnos (8:17, 12:17, 17:17 y 20:47) los dispara el RELEVO (job de abajo) a la hora exacta: espera,
-  # lanza el Reel y se vuelve a disparar a si mismo. El programador de GitHub queda solo como respaldo
-  # (demora o saltea corridas): si el relevo se cortara, la proxima corrida programada lo reinicia.
+  # lanza el Reel y se vuelve a disparar a si mismo. Las corridas programadas por hora quedan de respaldo:
+  # arman el turno si quedo pendiente y, si no hay ningun relevo funcionando, lanzan uno nuevo.
   schedule:
     - cron: "17 11-23 * * *"   # 08:17 a 20:17 Argentina
     - cron: "47 23 * * *"      # 20:47 Argentina
@@ -19,7 +20,7 @@ on:
         description: "Que Reel armar"
         default: "mascotas"
         type: choice
-        options: [mascotas, serie_mascota, vinculo, animales, varios, turno]
+        options: [mascotas, serie_mascota, cuidado, vinculo, animales, varios, turno]
       codigo:
         description: "Solo para tiktok_token: el codigo que muestra la pagina de autorizacion"
         required: false
@@ -34,7 +35,7 @@ permissions:
 jobs:
   relevo:
     # Espera hasta el proximo turno, lo dispara y le pasa la posta a un relevo nuevo (cadena que no se corta).
-    if: github.event_name == 'schedule' || github.event.inputs.modo == 'relevo'
+    if: github.event.inputs.modo == 'relevo'
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     concurrency:
@@ -100,6 +101,20 @@ jobs:
       CONTENIDO: ${{ (github.event_name == 'schedule' || github.event.inputs.contenido == 'turno') && 'interes' || github.event.inputs.contenido }}
       PROGRAMADA: ${{ github.event.schedule || (github.event.inputs.contenido == 'turno' && 'relevo' || '') }}
     steps:
+      - name: Mantener vivo el relevo
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ACTIVOS=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow publicar.yml --limit 40 \
+            --json displayTitle,status \
+            --jq '[.[] | select((.displayTitle | startswith("Relevo")) and .status != "completed")] | length')
+          if [ "${ACTIVOS:-0}" -eq 0 ]; then
+            echo "No hay ningun relevo funcionando: lanzo uno."
+            gh workflow run publicar.yml --repo "$GITHUB_REPOSITORY" -f modo=relevo
+          else
+            echo "El relevo esta funcionando ($ACTIVOS)."
+          fi
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
