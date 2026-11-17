@@ -2790,5 +2790,38 @@
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/nAtrRUj0OsE",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18149083648600764",
+  "fecha": "2026-11-17",
+  "titulo": "Si tienes un gato, no aceptes lirios: un roce puede dañar sus riñones",
+  "instagram": "https://www.instagram.com/reel/Df153EqDRbM/",
+  "categoria": "Cuidá a tu mascota",
+  "duracion": 35.9,
+  "estilo_hook": "contraste",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 8,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "09:13",
+  "estilo_titulo": "M",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu gato suele morder o husmear las plantas de casa?",
+  "tono": "seria",
+  "especie": "gatos",
+  "voz": "Jorge",
+  "gancho": "Un ramo precioso puede enfermar a tu gato sin que se lo coma",
+  "plan": "cuidado de mascotas",
+  "youtube": "https://youtube.com/shorts/p2S_1QDcbBg"
  }
 ]
