@@ -2824,5 +2824,38 @@
   "plan": "cuidado de mascotas",
   "youtube": "https://youtube.com/shorts/p2S_1QDcbBg",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18047393381831747",
+  "fecha": "2026-11-17",
+  "titulo": "Tu perro podría oler una convulsión, aunque nadie lo haya entrenado",
+  "instagram": "https://www.instagram.com/reel/Df2ynLjlaxY/",
+  "categoria": "Mascotas",
+  "duracion": 40.0,
+  "estilo_hook": "misterio",
+  "complejidad": "simple",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "17:28",
+  "estilo_titulo": "M",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Tu perro se acerca a ti cuando alguien se siente mal? Cuéntamelo en los comentarios.",
+  "tono": "alegre",
+  "especie": "perros",
+  "voz": "Alonso",
+  "gancho": "Tu perro podría oler algo que tú no ves",
+  "plan": "mascotas",
+  "youtube": "https://youtube.com/shorts/8VdM0Fm2Wzw"
  }
 ]
