@@ -2858,5 +2858,38 @@
   "plan": "mascotas",
   "youtube": "https://youtube.com/shorts/8VdM0Fm2Wzw",
   "yt_comentado": true
+ },
+ {
+  "ig_id": "18103605728563933",
+  "fecha": "2026-11-17",
+  "titulo": "Un loro perdido y tres palabras que pueden hacerlo volver 🥹",
+  "instagram": "https://www.instagram.com/reel/Df3La9Ojwkj/",
+  "categoria": "Mascotas y personas",
+  "duracion": 34.2,
+  "estilo_hook": "misterio",
+  "complejidad": "normal",
+  "tipo": "interes",
+  "puntajes": {
+   "gancho": 8,
+   "curiosidad": 8,
+   "retencion": 8,
+   "claridad": 9,
+   "ritmo": 8,
+   "comentarios": 8,
+   "compartidos": 7,
+   "seguidores": 7,
+   "credibilidad": 9
+  },
+  "cta_seguir": false,
+  "hora": "21:05",
+  "estilo_titulo": "M",
+  "cta_tipo": "comentario",
+  "pregunta": "¿Qué palabra repite tu mascota que te sorprendió?",
+  "tono": "emotiva",
+  "especie": "otras",
+  "voz": "Jorge",
+  "gancho": "Ofrecen recompensa por un loro que dice Pepe, papá y Lela",
+  "plan": "mascotas y personas",
+  "youtube": "https://youtube.com/shorts/u2E5-RUOtMw"
  }
 ]
