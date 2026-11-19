@@ -140,19 +140,23 @@ jobs:
       - name: Armar el Reel y pedir aprobacion
         run: python noticias_bot.py ${{ github.event.inputs.modo || 'normal' }}
 
+      # Si GitHub Pages falla (pasa cuando GitHub tiene problemas), no se frena nada: el bot sube el
+      # video directo a Instagram, YouTube y TikTok.
       - name: Subir archivos a GitHub Pages
         if: hashFiles('sitio/index.html') != ''
+        continue-on-error: true
         uses: actions/upload-pages-artifact@v3
         with:
           path: sitio
 
       - name: Publicar GitHub Pages
         if: hashFiles('sitio/index.html') != ''
+        continue-on-error: true
         id: pages
         uses: actions/deploy-pages@v4
 
       - name: Publicar en Instagram, YouTube y TikTok
-        if: hashFiles('pendiente.json') != ''
+        if: ${{ !cancelled() && hashFiles('pendiente.json') != '' }}
         env:
           PAGES_URL: ${{ steps.pages.outputs.page_url }}
         run: python noticias_bot.py publicar
