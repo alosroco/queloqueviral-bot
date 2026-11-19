@@ -2492,7 +2492,23 @@
   "gancho": "Tu gato casi no le maúlla así a otros gatos",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/Nzk8oeOE7O0",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 69,
+   "yt_likes": 5,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 51.85999999999999,
+   "yt_seg_vistos": 20,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 14,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 3.7
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18169714354468636",
