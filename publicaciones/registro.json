@@ -2541,7 +2541,23 @@
   "gancho": "Tu perro puede copiarte el bostezo. ¿Por qué?",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/oluCvnyKy0Y",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 854,
+   "yt_likes": 26,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 50.46000000000001,
+   "yt_seg_vistos": 21,
+   "yt_suscriptores": 1,
+   "yt_compartidos": 0,
+   "ig_likes": 1,
+   "ig_comentarios": 0,
+   "ig_vistas": 115,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 2.4
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "17915987664561901",
@@ -2574,7 +2590,23 @@
   "gancho": "Tu perro no decide mover esa pata",
   "plan": "por que mi mascota",
   "youtube": "https://youtube.com/shorts/AW861UVpqKo",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 2,
+   "yt_likes": 0,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 0,
+   "yt_seg_vistos": 0,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 0,
+   "ig_comentarios": 0,
+   "ig_vistas": 9,
+   "ig_compartidos": 0,
+   "ig_guardados": 0,
+   "ig_seg_vistos": 6.7
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18244517323315243",
@@ -2607,7 +2639,23 @@
   "gancho": "Perdió su vuelo y volvió con alguien más",
   "plan": "mascotas y personas",
   "youtube": "https://youtube.com/shorts/ULiqBcaWBCY",
-  "yt_comentado": true
+  "yt_comentado": true,
+  "metricas": {
+   "yt_vistas": 875,
+   "yt_likes": 30,
+   "yt_comentarios": 1,
+   "yt_pct_visto": 64.02,
+   "yt_seg_vistos": 22,
+   "yt_suscriptores": 0,
+   "yt_compartidos": 0,
+   "ig_likes": 3,
+   "ig_comentarios": 0,
+   "ig_vistas": 122,
+   "ig_compartidos": 0,
+   "ig_guardados": 1,
+   "ig_seg_vistos": 4.8
+  },
+  "medido_a_los_dias": 7
  },
  {
   "ig_id": "18091895855308511",
